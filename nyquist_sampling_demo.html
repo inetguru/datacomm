@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nyquist Sampling Theorem — Interactive Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #ffffff;
+    --panel: #f8f9fc;
+    --panel2: #f0f2f8;
+    --border: #dde1ef;
+    --accent: #0072e5;
+    --accent2: #0055b3;
+    --warn: #e05a1a;
+    --good: #1a9e3a;
+    --purple: #7c3aed;
+    --text: #1a1a2e;
+    --muted: #6b7299;
+    --dim: #c5cae0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    padding: 28px 20px 48px;
+    background-image:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,114,229,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 30% at 80% 110%, rgba(124,58,237,0.03) 0%, transparent 60%);
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border: 1px solid rgba(0,229,255,0.25);
+    padding: 3px 12px;
+    border-radius: 99px;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
+    color: #0a0a1a;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "main  main"
+      "recon spectrum"
+      "ctrl  ctrl"
+      "theory theory"
+      "explain explain";
+  }
+
+  @media (max-width: 680px) {
+    .layout {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "main" "recon" "spectrum" "ctrl" "theory" "explain";
+    }
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,114,229,0.25), transparent);
+  }
+
+  .area-main     { grid-area: main; }
+  .area-recon    { grid-area: recon; }
+  .area-spectrum { grid-area: spectrum; }
+  .area-ctrl     { grid-area: ctrl; }
+  .area-theory   { grid-area: theory; }
+  .area-explain  { grid-area: explain; }
+
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-label::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  /* ── Canvas ── */
+  canvas {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+    background: #f0f3fa;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Status bar ── */
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.77rem;
+    line-height: 1.4;
+    border: 1px solid;
+    transition: all 0.4s ease;
+  }
+
+  .status.ok  { background: rgba(26,158,58,0.07);  border-color: rgba(26,158,58,0.3);  color: var(--good); }
+  .status.bad { background: rgba(224,90,26,0.07); border-color: rgba(224,90,26,0.3);  color: var(--warn); }
+
+  .pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: blink 1.1s infinite;
+  }
+
+  .ok  .pulse { background: var(--good); }
+  .bad .pulse { background: var(--warn); }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  /* ── Controls ── */
+  .ctrl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 500px) { .ctrl-grid { grid-template-columns: 1fr; } }
+
+  .ctrl-item { display: flex; flex-direction: column; gap: 8px; }
+
+  .ctrl-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .ctrl-name {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .ctrl-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .cv-sig   { color: var(--purple); }
+  .cv-samp  { color: var(--accent); }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--dim);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range].sig::-webkit-slider-thumb  { background: var(--purple); }
+  input[type=range].samp::-webkit-slider-thumb { background: var(--accent); }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 8px rgba(0,114,229,0.3);
+    transition: transform 0.15s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+
+  .range-ends {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  /* ── Theory boxes ── */
+  .theory-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 500px) { .theory-row { grid-template-columns: 1fr; } }
+
+  .tbox {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 14px;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .tbox-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .tbox-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .tbox-formula {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+
+  /* ── Condition indicator ── */
+  .condition {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .cond-part { display: flex; align-items: center; gap: 6px; }
+  .cond-op   { color: var(--muted); font-size: 1rem; }
+  .cond-result { font-size: 1rem; font-weight: 700; padding: 4px 12px; border-radius: 6px; }
+  .cond-ok  { background: rgba(26,158,58,0.1);  color: var(--good); }
+  .cond-bad { background: rgba(224,90,26,0.1); color: var(--warn); }
+
+  /* ── Explain section ── */
+  .explain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) { .explain-grid { grid-template-columns: 1fr; } }
+
+  .ebox {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .ebox-icon { font-size: 1.5rem; margin-bottom: 8px; }
+
+  .ebox-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .ebox-body {
+    font-size: 0.78rem;
+    color: #5a5f7a;
+    line-height: 1.7;
+  }
+
+  .ebox-body strong { color: var(--text); }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    margin-top: 36px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">Interactive Demo</div>
+  <h1>Nyquist <span>Sampling</span> Theorem</h1>
+  <p class="subtitle">Nyquist–Shannon Sampling Theorem — Adjust the sliders to explore interactively</p>
+</header>
+
+<div class="layout">
+
+  <!-- ① Original Signal -->
+  <div class="card area-main">
+    <div class="card-label">① Original Signal + Sampling Points</div>
+    <canvas id="cvMain" height="170"></canvas>
+    <div class="status ok" id="statusBar">
+      <div class="pulse"></div>
+      <span id="statusTxt"></span>
+    </div>
+  </div>
+
+  <!-- ② Reconstructed Signal -->
+  <div class="card area-recon">
+    <div class="card-label">② Reconstructed Signal</div>
+    <canvas id="cvRecon" height="170"></canvas>
+  </div>
+
+  <!-- ③ Frequency Spectrum -->
+  <div class="card area-spectrum">
+    <div class="card-label">③ Frequency Spectrum</div>
+    <canvas id="cvSpectrum" height="170"></canvas>
+  </div>
+
+  <!-- Controls -->
+  <div class="card area-ctrl">
+    <div class="card-label">Parameters</div>
+    <div class="ctrl-grid">
+      <div class="ctrl-item">
+        <div class="ctrl-header">
+          <span class="ctrl-name">🎵 Signal Frequency f<sub>signal</sub></span>
+          <span class="ctrl-val cv-sig" id="vSig">3.0 Hz</span>
+        </div>
+        <input type="range" id="slSig" class="sig" min="1" max="12" value="3" step="0.5">
+        <div class="range-ends"><span>1 Hz</span><span>12 Hz</span></div>
+      </div>
+      <div class="ctrl-item">
+        <div class="ctrl-header">
+          <span class="ctrl-name">📷 Sampling Frequency f<sub>s</sub></span>
+          <span class="ctrl-val cv-samp" id="vSamp">14 Hz</span>
+        </div>
+        <input type="range" id="slSamp" class="samp" min="2" max="44" value="14" step="1">
+        <div class="range-ends"><span>2 Hz</span><span>44 Hz</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theory boxes -->
+  <div class="card area-theory">
+    <div class="card-label">Nyquist Condition</div>
+    <div class="theory-row">
+      <div class="tbox">
+        <div class="tbox-val" style="color:var(--purple)" id="tSig">3.0 Hz</div>
+        <div class="tbox-label">Max Signal Frequency<br>f<sub>max</sub></div>
+        <div class="tbox-formula">input signal</div>
+      </div>
+      <div class="tbox">
+        <div class="tbox-val" style="color:var(--warn)" id="tNyq">6.0 Hz</div>
+        <div class="tbox-label">Nyquist Frequency<br>f<sub>N</sub> = 2 × f<sub>max</sub></div>
+        <div class="tbox-formula">minimum sampling rate</div>
+      </div>
+      <div class="tbox">
+        <div class="tbox-val" style="color:var(--accent)" id="tSamp">14 Hz</div>
+        <div class="tbox-label">Sampling Frequency<br>f<sub>s</sub></div>
+        <div class="tbox-formula">actual sampling rate</div>
+      </div>
+    </div>
+    <div class="condition">
+      <div class="cond-part">
+        <span style="color:var(--accent)" id="cSamp">14</span>
+        <span style="color:var(--muted); font-size:0.7rem">f_s</span>
+      </div>
+      <span class="cond-op" id="cOp">≥</span>
+      <div class="cond-part">
+        <span style="color:var(--warn)" id="cNyq">6</span>
+        <span style="color:var(--muted); font-size:0.7rem">2×f_max</span>
+      </div>
+      <span class="cond-result cond-ok" id="cResult">✓ Condition Met</span>
+    </div>
+  </div>
+
+  <!-- Explanation -->
+  <div class="card area-explain">
+    <div class="card-label">Key Concepts</div>
+    <div class="explain-grid">
+      <div class="ebox">
+        <div class="ebox-icon">🎯</div>
+        <div class="ebox-title">Nyquist Theorem</div>
+        <div class="ebox-body">
+          To perfectly reconstruct an analog signal from its digital samples, the <strong>sampling frequency (f<sub>s</sub>) must be at least twice the highest frequency (f<sub>max</sub>)</strong> present in the signal.<br><br>
+          <strong>f<sub>s</sub> ≥ 2 × f<sub>max</sub></strong>
+        </div>
+      </div>
+      <div class="ebox">
+        <div class="ebox-icon">👻</div>
+        <div class="ebox-title">Aliasing</div>
+        <div class="ebox-body">
+          When the condition is violated, <strong>phantom low-frequency signals appear</strong> that were not in the original. This distortion is called aliasing.<br><br>
+          Example: CD audio (44.1 kHz) is designed to exceed twice the human hearing limit (20 kHz).
+        </div>
+      </div>
+      <div class="ebox">
+        <div class="ebox-icon">🔬</div>
+        <div class="ebox-title">Real-World Applications</div>
+        <div class="ebox-body">
+          <strong>CD Audio</strong>: 44,100 Hz sampling<br>
+          <strong>Phone Voice</strong>: 8,000 Hz sampling<br>
+          <strong>Medical MRI</strong>: k-space sampling<br>
+          <strong>Digital Camera</strong>: anti-aliasing filter<br><br>
+          Applied across all digital signal processing.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Made with ♥ for Signal Processing Education &nbsp;|&nbsp; Nyquist–Shannon Sampling Theorem (1949)</footer>
+
+<script>
+// ── Elements ──
+const slSig   = document.getElementById('slSig');
+const slSamp  = document.getElementById('slSamp');
+const vSig    = document.getElementById('vSig');
+const vSamp   = document.getElementById('vSamp');
+const statusBar  = document.getElementById('statusBar');
+const statusTxt  = document.getElementById('statusTxt');
+const tSig  = document.getElementById('tSig');
+const tNyq  = document.getElementById('tNyq');
+const tSamp = document.getElementById('tSamp');
+const cSamp = document.getElementById('cSamp');
+const cOp   = document.getElementById('cOp');
+const cNyq  = document.getElementById('cNyq');
+const cResult = document.getElementById('cResult');
+const cvMain     = document.getElementById('cvMain');
+const cvRecon    = document.getElementById('cvRecon');
+const cvSpectrum = document.getElementById('cvSpectrum');
+const DPR = window.devicePixelRatio || 1;
+
+// ── Resize canvases ──
+function resize() {
+  [cvMain, cvRecon, cvSpectrum].forEach(cv => {
+    cv.width  = cv.offsetWidth  * DPR;
+    cv.height = cv.offsetHeight * DPR;
+  });
+}
+
+// ── Draw helpers ──
+function grid(ctx, W, H) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(180,190,220,0.7)';
+  ctx.lineWidth   = 1;
+  const rows = 4, cols = 8;
+  for (let i = 1; i < rows; i++) {
+    const y = (i / rows) * H;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+  for (let j = 1; j < cols; j++) {
+    const x = (j / cols) * W;
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  // Zero line
+  ctx.strokeStyle = 'rgba(120,130,170,0.5)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ── Main canvas: original + samples ──
+function drawMain(fSig, fSamp) {
+  const cv  = cvMain;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const mid = H / 2, amp = H * 0.36;
+  const dur = 2, N = 800;
+  const good = fSamp >= 2 * fSig;
+
+  ctx.clearRect(0, 0, W, H);
+  grid(ctx, W, H);
+
+  // Signal curve gradient
+  const grad = ctx.createLinearGradient(0, mid - amp, 0, mid + amp);
+  grad.addColorStop(0, 'rgba(124,58,237,0.9)');
+  grad.addColorStop(1, 'rgba(90,30,180,0.5)');
+
+  ctx.beginPath();
+  ctx.strokeStyle = grad;
+  ctx.lineWidth   = 2.5 * DPR;
+  ctx.shadowColor = 'rgba(192,132,252,0.4)';
+  ctx.shadowBlur  = 8;
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * dur;
+    const x = (i / N) * W;
+    const y = mid - amp * Math.sin(2 * Math.PI * fSig * t);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Samples
+  const sColor  = good ? '#0072e5'  : '#e05a1a';
+  const sGlow   = good ? 'rgba(0,114,229,0.3)' : 'rgba(224,90,26,0.3)';
+  const stColor = good ? 'rgba(0,114,229,0.2)' : 'rgba(224,90,26,0.2)';
+  const numS = Math.ceil(fSamp * dur) + 1;
+
+  for (let s = 0; s < numS; s++) {
+    const t = s / fSamp;
+    if (t > dur) break;
+    const x = (t / dur) * W;
+    const y = mid - amp * Math.sin(2 * Math.PI * fSig * t);
+
+    // Stem
+    ctx.save();
+    ctx.strokeStyle = stColor;
+    ctx.lineWidth   = 1.5 * DPR;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x, mid); ctx.lineTo(x, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Dot
+    ctx.save();
+    ctx.shadowColor = sGlow;
+    ctx.shadowBlur  = 10;
+    ctx.beginPath();
+    ctx.arc(x, y, 5 * DPR, 0, Math.PI * 2);
+    ctx.fillStyle   = sColor;
+    ctx.fill();
+    ctx.strokeStyle = '#f0f3fa';
+    ctx.lineWidth   = 1.5 * DPR;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Legend
+  ctx.font      = `${9 * DPR}px Space Mono`;
+  ctx.fillStyle = 'rgba(124,58,237,0.9)';
+  ctx.fillText('▬ Original Signal', 10 * DPR, 16 * DPR);
+  ctx.fillStyle = sColor;
+  ctx.fillText('● Sample Points', 10 * DPR, 28 * DPR);
+
+  // Duration label
+  ctx.fillStyle = 'rgba(130,140,180,0.7)';
+  ctx.textAlign = 'right';
+  ctx.fillText('t = 2s', W - 6 * DPR, H - 6 * DPR);
+  ctx.textAlign = 'left';
+}
+
+// ── Recon canvas: sinc interpolation ──
+function drawRecon(fSig, fSamp) {
+  const cv  = cvRecon;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const mid = H / 2, amp = H * 0.36;
+  const dur = 2, N = 600;
+  const good = fSamp >= 2 * fSig;
+
+  ctx.clearRect(0, 0, W, H);
+  grid(ctx, W, H);
+
+  // Collect samples
+  const samples = [];
+  const nSamp = Math.ceil(fSamp * (dur + 1)) + 4;
+  for (let s = -2; s < nSamp; s++) {
+    const t = s / fSamp;
+    samples.push({ t, v: Math.sin(2 * Math.PI * fSig * t) });
+  }
+
+  // Reconstructed via sinc
+  const rColor = good ? '#1a9e3a' : '#e05a1a';
+  const rGlow  = good ? 'rgba(26,158,58,0.2)' : 'rgba(224,90,26,0.2)';
+
+  ctx.beginPath();
+  ctx.strokeStyle = rColor;
+  ctx.lineWidth   = 2.5 * DPR;
+  ctx.shadowColor = rGlow;
+  ctx.shadowBlur  = 8;
+
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * dur;
+    let val = 0;
+    samples.forEach(s => {
+      const arg = (t - s.t) * fSamp;
+      const sinc = Math.abs(arg) < 1e-9
+        ? 1
+        : Math.sin(Math.PI * arg) / (Math.PI * arg);
+      val += s.v * sinc;
+    });
+    val = Math.max(-1.3, Math.min(1.3, val));
+    const x = (i / N) * W;
+    const y = mid - amp * val;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Ghost original
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(124,58,237,0.2)';
+  ctx.lineWidth   = 1.5 * DPR;
+  ctx.setLineDash([5, 4]);
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * dur;
+    const x = (i / N) * W;
+    const y = mid - amp * Math.sin(2 * Math.PI * fSig * t);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels
+  ctx.font      = `${9 * DPR}px Space Mono`;
+  ctx.fillStyle = rColor;
+  ctx.fillText(good ? '▬ Reconstruction OK ✓' : '▬ Aliasing Detected ✗', 10 * DPR, 16 * DPR);
+  ctx.fillStyle = 'rgba(124,58,237,0.5)';
+  ctx.fillText('┄ Original (reference)', 10 * DPR, 28 * DPR);
+
+  // Error overlay when aliasing
+  if (!good) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,107,53,0.04)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font      = `bold ${13 * DPR}px Inter`;
+    ctx.fillStyle = 'rgba(224,90,26,0.35)';
+    ctx.textAlign = 'center';
+    ctx.fillText('Aliasing Detected — Reconstruction Failed', W / 2, H / 2 + 4 * DPR);
+    ctx.restore();
+  }
+}
+
+// ── Spectrum canvas ──
+function drawSpectrum(fSig, fSamp) {
+  const cv  = cvSpectrum;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const good = fSamp >= 2 * fSig;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 36 * DPR, padR = 16 * DPR;
+  const padT = 16 * DPR, padB = 30 * DPR;
+  const cW = W - padL - padR;
+  const cH = H - padT - padB;
+  const maxF = Math.max(fSamp * 1.05, fSig * 2.5);
+
+  const fx = f => padL + (f / maxF) * cW;
+  const fy = v => padT + cH - v * cH;
+
+  // Background
+  ctx.fillStyle = 'rgba(0,0,0,0)';
+  ctx.fillRect(padL, padT, cW, cH);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(180,190,220,0.6)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (i / 4) * cH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cW, y); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#aab0cc';
+  ctx.lineWidth = 1.5 * DPR;
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + cH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, padT + cH); ctx.lineTo(padL + cW, padT + cH); ctx.stroke();
+
+  // Nyquist line
+  const nyqX = fx(fSamp / 2);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,107,53,0.65)';
+  ctx.lineWidth   = 1.5 * DPR;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(nyqX, padT); ctx.lineTo(nyqX, padT + cH); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font      = `${8.5 * DPR}px Space Mono`;
+  ctx.fillStyle = 'rgba(255,107,53,0.85)';
+  ctx.textAlign = 'center';
+  ctx.fillText('f_N', nyqX, padT + 11 * DPR);
+  ctx.restore();
+
+  // Signal bar
+  const sigX  = fx(fSig);
+  const barH  = cH * 0.78;
+  const bW    = Math.max(5 * DPR, cW * 0.02);
+
+  const grad1 = ctx.createLinearGradient(0, fy(1), 0, fy(0));
+  grad1.addColorStop(0, 'rgba(124,58,237,0.85)');
+  grad1.addColorStop(1, 'rgba(124,58,237,0.1)');
+  ctx.shadowColor = 'rgba(124,58,237,0.3)';
+  ctx.shadowBlur  = 10;
+  ctx.fillStyle   = grad1;
+  ctx.fillRect(sigX - bW / 2, padT + cH - barH, bW, barH);
+  ctx.shadowBlur  = 0;
+
+  ctx.font      = `${8 * DPR}px Space Mono`;
+  ctx.fillStyle = '#7c3aed';
+  ctx.textAlign = 'center';
+  ctx.fillText(`f=${fSig}Hz`, sigX, padT + cH - barH - 4 * DPR);
+
+  // Alias bar
+  if (!good) {
+    const alias = fSamp - fSig;
+    if (alias > 0 && alias < maxF) {
+      const aliasX = fx(alias);
+      const aBarH  = cH * 0.52;
+      const grad2  = ctx.createLinearGradient(0, 0, 0, aBarH);
+      grad2.addColorStop(0, 'rgba(255,107,53,0.9)');
+      grad2.addColorStop(1, 'rgba(255,107,53,0.15)');
+      ctx.shadowColor = 'rgba(255,107,53,0.5)';
+      ctx.shadowBlur  = 10;
+      ctx.fillStyle   = grad2;
+      ctx.fillRect(aliasX - bW / 2, padT + cH - aBarH, bW, aBarH);
+      ctx.shadowBlur  = 0;
+      ctx.fillStyle = '#ff6b35';
+      ctx.textAlign = 'center';
+      ctx.fillText('alias!', aliasX, padT + cH - aBarH - 4 * DPR);
+    }
+  }
+
+  // f_s tick
+  const fsX = fx(fSamp);
+  if (fsX < padL + cW + 2) {
+    ctx.font      = `${7.5 * DPR}px Space Mono`;
+    ctx.fillStyle = 'rgba(0,85,179,0.7)';
+    ctx.textAlign = 'center';
+    ctx.fillText(`f_s=${fSamp}Hz`, Math.min(fsX, padL + cW - 20 * DPR), padT + cH + 20 * DPR);
+  }
+
+  // Axis labels
+  ctx.font      = `${7.5 * DPR}px Space Mono`;
+  ctx.fillStyle = '#8890b0';
+  ctx.textAlign = 'center';
+  ctx.fillText('Frequency (Hz)', padL + cW / 2, H - 2 * DPR);
+  ctx.textAlign = 'right';
+  ctx.fillText('Amp', padL - 4 * DPR, padT + 8 * DPR);
+  ctx.textAlign = 'left';
+}
+
+// ── Main update ──
+function update() {
+  const fSig  = parseFloat(slSig.value);
+  const fSamp = parseFloat(slSamp.value);
+  const good  = fSamp >= 2 * fSig;
+
+  vSig.textContent  = `${fSig.toFixed(1)} Hz`;
+  vSamp.textContent = `${fSamp} Hz`;
+  tSig.textContent  = `${fSig.toFixed(1)} Hz`;
+  tNyq.textContent  = `${(2 * fSig).toFixed(1)} Hz`;
+  tSamp.textContent = `${fSamp} Hz`;
+  cSamp.textContent = fSamp;
+  cNyq.textContent  = (2 * fSig).toFixed(1);
+
+  if (good) {
+    cOp.textContent         = '≥';
+    cOp.style.color         = 'var(--good)';
+    cResult.textContent     = '✓ Condition Met';
+    cResult.className       = 'cond-result cond-ok';
+    statusBar.className     = 'status ok';
+    statusTxt.textContent   = `Good sampling — f_s(${fSamp}Hz) ≥ 2×f_max(${(2*fSig).toFixed(1)}Hz). The signal can be perfectly reconstructed.`;
+  } else {
+    cOp.textContent         = '<';
+    cOp.style.color         = 'var(--warn)';
+    cResult.textContent     = '✗ Condition Violated!';
+    cResult.className       = 'cond-result cond-bad';
+    statusBar.className     = 'status bad';
+    statusTxt.textContent   = `Aliasing! f_s(${fSamp}Hz) < 2×f_max(${(2*fSig).toFixed(1)}Hz). A false signal is generated — reconstruction is impossible.`;
+  }
+
+  drawMain(fSig, fSamp);
+  drawRecon(fSig, fSamp);
+  drawSpectrum(fSig, fSamp);
+}
+
+// ── Init ──
+slSig.addEventListener('input', update);
+slSamp.addEventListener('input', update);
+window.addEventListener('resize', () => { resize(); update(); });
+
+// Initial render (wait for layout)
+setTimeout(() => { resize(); update(); }, 60);
+</script>
+</body>
+</html>
