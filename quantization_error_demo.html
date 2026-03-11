@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linear Quantization & Quantization Error</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:       #f5f3ee;
+  --surface:  #ffffff;
+  --border:   #e0dbd0;
+  --text:     #1c1a16;
+  --muted:    #8c8070;
+  --dim:      #d0cab8;
+
+  --orig:     #2563eb;
+  --quant:    #dc2626;
+  --error:    #f59e0b;
+  --info:     #059669;
+
+  --k1: #ef4444;
+  --k2: #f97316;
+  --k3: #eab308;
+  --k4: #22c55e;
+  --k5: #3b82f6;
+  --k6: #8b5cf6;
+  --k7: #ec4899;
+  --k8: #06b6d4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  padding: 32px 24px 56px;
+}
+
+/* ── Header ── */
+.header {
+  max-width: 1080px;
+  margin: 0 auto 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+h1 {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(1.4rem, 3.5vw, 2.1rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.15;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--quant);
+}
+
+.tagline {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Layout ── */
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+/* ── k-selector strip ── */
+.k-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.k-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.k-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.kb {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.kb:hover { border-color: var(--text); color: var(--text); }
+
+.kb.active {
+  color: #fff;
+  border-color: transparent;
+}
+
+.k-info {
+  margin-left: auto;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.kinfo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 90px;
+}
+
+.kinfo-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.kinfo-lbl {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* ── Main chart area ── */
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 720px) {
+  .charts { grid-template-columns: 1fr; }
+  .k-info { margin-left: 0; }
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.panel-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+canvas {
+  width: 100%;
+  display: block;
+  border-radius: 6px;
+  background: #fafaf7;
+  border: 1px solid var(--border);
+}
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.leg-line {
+  width: 20px; height: 2.5px;
+  border-radius: 2px;
+}
+
+.leg-dash {
+  width: 20px; height: 0;
+  border-top: 2px dashed;
+  border-radius: 2px;
+}
+
+/* ── Staircase steps visualization ── */
+.panel.full { grid-column: 1 / -1; }
+
+/* ── SNR / Info chart ── */
+.metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) { .metrics-row { grid-template-columns: 1fr; } }
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.metric-card .title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.bar-track {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+.bar-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+/* ── Comparison strip ── */
+.compare-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 24px;
+}
+
+.compare-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.compare-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.cbar-row:hover { opacity: 0.85; }
+
+.cbar-k {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  width: 30px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.cbar-track {
+  flex: 1;
+  height: 18px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+}
+
+.cbar-error-fill {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+
+.cbar-info-fill {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+.cbar-stats {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  white-space: nowrap;
+  width: 140px;
+  flex-shrink: 0;
+}
+
+/* ── Explain box ── */
+.explain {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 680px) { .explain { grid-template-columns: 1fr; } }
+
+.exp-block {}
+
+.exp-head {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.exp-body {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.exp-body strong { color: var(--text); }
+
+.formula {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  color: var(--text);
+}
+
+/* ── Active k color vars ── */
+.active-color { transition: color 0.2s; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Signal Processing — Interactive Demo</div>
+  <h1>Linear Quantization &amp; <em>Quantization Error</em></h1>
+  <p class="tagline">2ᵏ-level uniform quantization applied to a waveform. Observe how k affects error and information.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- k selector -->
+  <div class="k-strip">
+    <span class="k-label">BIT DEPTH k =</span>
+    <div class="k-buttons" id="kButtons"></div>
+    <div class="k-info">
+      <div class="kinfo-item">
+        <span class="kinfo-val" id="infoLevels" style="color:var(--info)">—</span>
+        <span class="kinfo-lbl">QUANTIZATION LEVELS (2ᵏ)</span>
+      </div>
+      <div class="kinfo-item">
+        <span class="kinfo-val" id="infoBits" style="color:var(--orig)">—</span>
+        <span class="kinfo-lbl">BITS PER SAMPLE</span>
+      </div>
+      <div class="kinfo-item">
+        <span class="kinfo-val" id="infoSNR" style="color:var(--quant)">—</span>
+        <span class="kinfo-lbl">THEORETICAL SNR</span>
+      </div>
+      <div class="kinfo-item">
+        <span class="kinfo-val" id="infoStep" style="color:var(--error)">—</span>
+        <span class="kinfo-lbl">STEP SIZE (Δ)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="charts">
+    <!-- Original + Quantized -->
+    <div class="panel">
+      <div class="panel-title">
+        <span class="dot" style="background:var(--orig)"></span>
+        Original vs Quantized Waveform
+      </div>
+      <canvas id="cvWave" height="180"></canvas>
+      <div class="legend">
+        <div class="leg-item">
+          <div class="leg-line" style="background:var(--orig)"></div>
+          Original signal
+        </div>
+        <div class="leg-item">
+          <div class="leg-line" style="background:var(--quant)"></div>
+          Quantized (staircase)
+        </div>
+        <div class="leg-item">
+          <div class="leg-dash" style="border-color:var(--dim)"></div>
+          Quantization levels
+        </div>
+      </div>
+    </div>
+
+    <!-- Error signal -->
+    <div class="panel">
+      <div class="panel-title">
+        <span class="dot" style="background:var(--error)"></span>
+        Quantization Error  e(t) = x(t) − x̂(t)
+      </div>
+      <canvas id="cvError" height="180"></canvas>
+      <div class="legend">
+        <div class="leg-item">
+          <div class="leg-line" style="background:var(--error)"></div>
+          Error signal e(t)
+        </div>
+        <div class="leg-item">
+          <div class="leg-dash" style="border-color:#dc2626aa"></div>
+          ±Δ/2 bounds
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics row -->
+  <div class="metrics-row">
+    <div class="metric-card">
+      <div class="title">Max Absolute Error</div>
+      <div class="bar-track">
+        <div class="bar-fill" id="mBarErr" style="background:var(--quant)"></div>
+      </div>
+      <div class="bar-label" id="mValErr">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="title">RMS Error (RMSE)</div>
+      <div class="bar-track">
+        <div class="bar-fill" id="mBarRMS" style="background:var(--error)"></div>
+      </div>
+      <div class="bar-label" id="mValRMS">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="title">Data per second (8kHz)</div>
+      <div class="bar-track">
+        <div class="bar-fill" id="mBarBps" style="background:var(--info)"></div>
+      </div>
+      <div class="bar-label" id="mValBps">—</div>
+    </div>
+  </div>
+
+  <!-- Comparison strip -->
+  <div class="compare-strip">
+    <div class="compare-title">k = 1 … 8 — Error vs Information Tradeoff (click a row to select)</div>
+    <div class="compare-bars" id="compareBars"></div>
+    <div class="legend" style="margin-top:12px">
+      <div class="leg-item"><div class="leg-line" style="background:var(--quant);opacity:.7"></div> Relative RMSE (error, smaller = better)</div>
+      <div class="leg-item"><div class="leg-line" style="background:var(--info);opacity:.7"></div> Relative data rate (information, larger = more)</div>
+    </div>
+  </div>
+
+  <!-- Explain -->
+  <div class="explain">
+    <div class="exp-block">
+      <div class="exp-head" style="color:var(--orig)">Linear Quantization</div>
+      <div class="exp-body">
+        The amplitude range [−A, +A] is divided into <strong>L = 2ᵏ equal intervals</strong>.
+        Each sample is mapped to the nearest level midpoint.
+        The step size is:
+      </div>
+      <div class="formula">Δ = 2A / 2ᵏ = A / 2^(k−1)</div>
+    </div>
+    <div class="exp-block">
+      <div class="exp-head" style="color:var(--quant)">Quantization Error</div>
+      <div class="exp-body">
+        The error is bounded by <strong>±Δ/2</strong>. For uniform quantization, the error is approximately uniformly distributed, giving an RMS error of:
+      </div>
+      <div class="formula">RMSE ≈ Δ / √12 = Δ / 2√3</div>
+    </div>
+    <div class="exp-block">
+      <div class="exp-head" style="color:var(--info)">SNR &amp; Information</div>
+      <div class="exp-body">
+        Each extra bit of depth <strong>halves the step size</strong>, reducing RMSE by 6 dB and doubling the data rate. The theoretical SNR for a sinusoidal input is:
+      </div>
+      <div class="formula">SNR ≈ 6.02k + 1.76 dB</div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── Config ──────────────────────────────────────────────
+const KLIST = [1,2,3,4,5,6,7,8];
+const KCOLORS = {
+  1:'#ef4444', 2:'#f97316', 3:'#eab308', 4:'#22c55e',
+  5:'#3b82f6', 6:'#8b5cf6', 7:'#ec4899', 8:'#06b6d4'
+};
+const DPR = window.devicePixelRatio || 1;
+const FS = 8000;  // sample rate for data rate display
+
+// Signal: mix of two sinusoids for a richer waveform
+function signal(t) {
+  return 0.55 * Math.sin(2 * Math.PI * 1.0 * t)
+       + 0.30 * Math.sin(2 * Math.PI * 2.3 * t + 0.8)
+       + 0.12 * Math.sin(2 * Math.PI * 4.1 * t + 1.5);
+}
+
+// ── State ──────────────────────────────────────────────
+let currentK = 4;
+const DURATION = 3; // seconds to show
+const NPTS = 600;
+
+function getSignalPoints() {
+  const pts = [];
+  for (let i = 0; i <= NPTS; i++) {
+    const t = (i / NPTS) * DURATION;
+    pts.push({ t, v: signal(t) });
+  }
+  return pts;
+}
+
+function quantize(v, k) {
+  const L = Math.pow(2, k);
+  const A = 1.0;
+  const delta = (2 * A) / L;
+  // clamp then quantize
+  const vc = Math.max(-A, Math.min(A - 1e-9, v));
+  const idx = Math.floor((vc + A) / delta);
+  return -A + (idx + 0.5) * delta;
+}
+
+function computeMetrics(k) {
+  const A = 1.0;
+  const L = Math.pow(2, k);
+  const delta = (2 * A) / L;
+  let sumSqErr = 0, maxErr = 0;
+  const pts = getSignalPoints();
+  pts.forEach(p => {
+    const qv = quantize(p.v, k);
+    const e = Math.abs(p.v - qv);
+    sumSqErr += e * e;
+    if (e > maxErr) maxErr = e;
+  });
+  const rmse = Math.sqrt(sumSqErr / pts.length);
+  const snr = 6.02 * k + 1.76;
+  const bps = k * FS;
+  return { delta, L, k, rmse, maxErr, snr, bps };
+}
+
+// ── Canvas helpers ─────────────────────────────────────
+function setupCanvas(cv) {
+  cv.width  = cv.offsetWidth * DPR;
+  cv.height = cv.offsetHeight * DPR;
+  return cv.getContext('2d');
+}
+
+function drawGrid(ctx, W, H) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(200,195,185,0.5)';
+  ctx.lineWidth = 1;
+  const rows = 4, cols = 6;
+  for (let i = 1; i < rows; i++) {
+    const y = (i / rows) * H;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+  for (let j = 1; j < cols; j++) {
+    const x = (j / cols) * W;
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  // Zero
+  ctx.strokeStyle = 'rgba(150,140,120,0.5)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ── Draw waveform ──────────────────────────────────────
+function drawWave(k) {
+  const cv = document.getElementById('cvWave');
+  const ctx = setupCanvas(cv);
+  const W = cv.width, H = cv.height;
+  const A = 1.0, pad = 0.1;
+  const mid = H / 2;
+  const amp = H * (0.5 - pad);
+  const pts = getSignalPoints();
+  const L = Math.pow(2, k);
+  const delta = 2 * A / L;
+  const col = KCOLORS[k];
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafaf7';
+  ctx.fillRect(0, 0, W, H);
+
+  drawGrid(ctx, W, H);
+
+  // Quantization level lines
+  ctx.save();
+  ctx.strokeStyle = 'rgba(180,170,155,0.4)';
+  ctx.lineWidth = 0.8;
+  ctx.setLineDash([2,4]);
+  for (let l = 0; l <= L; l++) {
+    const v = -A + l * delta;
+    const y = mid - (v / A) * amp;
+    if (y >= 0 && y <= H) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  const tx = i => (i / NPTS) * W;
+  const ty = v => mid - (v / A) * amp;
+
+  // Original signal
+  ctx.beginPath();
+  ctx.strokeStyle = '#2563eb';
+  ctx.lineWidth = 2 * DPR;
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(tx(i), ty(p.v)) : ctx.lineTo(tx(i), ty(p.v)));
+  ctx.stroke();
+
+  // Quantized staircase
+  ctx.beginPath();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2 * DPR;
+  pts.forEach((p, i) => {
+    const qv = quantize(p.v, k);
+    const x = tx(i), y = ty(qv);
+    if (i === 0) { ctx.moveTo(x, y); return; }
+    const prevQv = quantize(pts[i-1].v, k);
+    if (prevQv !== qv) {
+      // vertical jump
+      ctx.lineTo(tx(i-1), ty(qv));
+    }
+    ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill between original and quantized
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const x = tx(i), y = ty(p.v);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  for (let i = pts.length - 1; i >= 0; i--) {
+    ctx.lineTo(tx(i), ty(quantize(pts[i].v, k)));
+  }
+  ctx.closePath();
+  ctx.fillStyle = col + '22';
+  ctx.fill();
+
+  // Labels
+  ctx.font = `${9*DPR}px DM Mono`;
+  ctx.fillStyle = '#8c8070';
+  ctx.fillText(`k=${k}  L=2ᵏ=${L} levels`, 8*DPR, 14*DPR);
+  ctx.fillText(`Δ=${delta.toFixed(4)}`, 8*DPR, 26*DPR);
+}
+
+// ── Draw error signal ──────────────────────────────────
+function drawError(k) {
+  const cv = document.getElementById('cvError');
+  const ctx = setupCanvas(cv);
+  const W = cv.width, H = cv.height;
+  const A = 1.0, delta = 2 * A / Math.pow(2, k);
+  const halfDelta = delta / 2;
+  const pad = 0.1;
+  const mid = H / 2;
+  // scale: error is bounded in [-delta/2, delta/2], show some margin
+  const scale = (H * (0.5 - pad)) / (halfDelta * 1.4);
+  const pts = getSignalPoints();
+  const col = KCOLORS[k];
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafaf7';
+  ctx.fillRect(0, 0, W, H);
+
+  drawGrid(ctx, W, H);
+
+  const tx = i => (i / NPTS) * W;
+  const ey = e => mid - e * scale;
+
+  // ±Δ/2 bound lines
+  ctx.save();
+  ctx.strokeStyle = '#dc262655';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(0, ey(halfDelta));  ctx.lineTo(W, ey(halfDelta));  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, ey(-halfDelta)); ctx.lineTo(W, ey(-halfDelta)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Bound labels
+  ctx.font = `${8*DPR}px DM Mono`;
+  ctx.fillStyle = '#dc2626aa';
+  ctx.fillText(`+Δ/2 = +${halfDelta.toFixed(4)}`, 6*DPR, ey(halfDelta) - 4*DPR);
+  ctx.fillText(`−Δ/2 = −${halfDelta.toFixed(4)}`, 6*DPR, ey(-halfDelta) + 11*DPR);
+
+  // Error area fill
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const e = p.v - quantize(p.v, k);
+    i === 0 ? ctx.moveTo(tx(i), ey(e)) : ctx.lineTo(tx(i), ey(e));
+  });
+  ctx.lineTo(W, mid); ctx.lineTo(0, mid); ctx.closePath();
+  ctx.fillStyle = col + '30';
+  ctx.fill();
+
+  // Error curve
+  ctx.beginPath();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2 * DPR;
+  pts.forEach((p, i) => {
+    const e = p.v - quantize(p.v, k);
+    i === 0 ? ctx.moveTo(tx(i), ey(e)) : ctx.lineTo(tx(i), ey(e));
+  });
+  ctx.stroke();
+
+  // RMSE line
+  let sumSq = 0;
+  pts.forEach(p => { const e = p.v - quantize(p.v, k); sumSq += e*e; });
+  const rmse = Math.sqrt(sumSq / pts.length);
+  ctx.save();
+  ctx.strokeStyle = '#1c1a1680';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(0, ey(rmse));  ctx.lineTo(W, ey(rmse));  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, ey(-rmse)); ctx.lineTo(W, ey(-rmse)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  ctx.font = `${8*DPR}px DM Mono`;
+  ctx.fillStyle = '#1c1a16aa';
+  ctx.textAlign = 'right';
+  ctx.fillText(`RMSE = ${rmse.toFixed(5)}`, W - 6*DPR, ey(rmse) - 3*DPR);
+  ctx.textAlign = 'left';
+}
+
+// ── Draw comparison bars ────────────────────────────────
+function buildCompareBars() {
+  const container = document.getElementById('compareBars');
+  container.innerHTML = '';
+
+  // Compute all metrics for normalization
+  const allM = KLIST.map(k => computeMetrics(k));
+  const maxRmse = allM[0].rmse;  // k=1 has max error
+  const maxBps  = allM[allM.length-1].bps; // k=8 has max bps
+
+  allM.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'cbar-row';
+    row.id = `crow-${m.k}`;
+    row.onclick = () => selectK(m.k);
+
+    const errW  = (m.rmse / maxRmse) * 45; // max 45% width
+    const infoW = (m.bps  / maxBps)  * 45; // max 45% width
+
+    row.innerHTML = `
+      <span class="cbar-k">k=${m.k}</span>
+      <div class="cbar-track">
+        <div class="cbar-error-fill" id="cef-${m.k}"
+             style="width:${errW}%; background:${KCOLORS[m.k]}88"></div>
+        <div style="flex:1"></div>
+        <div class="cbar-info-fill" id="cif-${m.k}"
+             style="width:${infoW}%; background:${KCOLORS[m.k]}55; border-left:2px solid ${KCOLORS[m.k]}"></div>
+      </div>
+      <span class="cbar-stats" id="cst-${m.k}">
+        RMSE=${m.rmse.toFixed(4)} | ${(m.bps/1000).toFixed(0)} kbps
+      </span>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function highlightCompareBars(k) {
+  KLIST.forEach(ki => {
+    const row = document.getElementById(`crow-${ki}`);
+    if (row) row.style.opacity = ki === k ? '1' : '0.55';
+  });
+}
+
+// ── Update all metrics display ──────────────────────────
+function updateMetrics(k) {
+  const m = computeMetrics(k);
+
+  document.getElementById('infoLevels').textContent = m.L.toLocaleString();
+  document.getElementById('infoBits').textContent   = `${m.k} bit`;
+  document.getElementById('infoSNR').textContent    = `${m.snr.toFixed(1)} dB`;
+  document.getElementById('infoStep').textContent   = m.delta.toFixed(4);
+
+  const maxM = computeMetrics(1); // baseline for bar width
+  const maxBps = computeMetrics(8).bps;
+
+  const errPct = (m.maxErr / (maxM.maxErr + 0.001)) * 100;
+  const rmsPct = (m.rmse   / (maxM.rmse   + 0.001)) * 100;
+  const bpsPct = (m.bps    / maxBps) * 100;
+
+  document.getElementById('mBarErr').style.width = errPct + '%';
+  document.getElementById('mBarRMS').style.width = rmsPct + '%';
+  document.getElementById('mBarBps').style.width = bpsPct + '%';
+
+  document.getElementById('mValErr').textContent = `${m.maxErr.toFixed(5)}  (max |e(t)|)`;
+  document.getElementById('mValRMS').textContent = `${m.rmse.toFixed(5)}  (≈ Δ/√12 = ${(m.delta/Math.sqrt(12)).toFixed(5)})`;
+  document.getElementById('mValBps').textContent = `${m.k} bits/sample × 8000 Hz = ${(m.bps/1000).toFixed(0)} kbps`;
+}
+
+// ── k button setup ─────────────────────────────────────
+function buildKButtons() {
+  const container = document.getElementById('kButtons');
+  KLIST.forEach(k => {
+    const btn = document.createElement('button');
+    btn.className = 'kb';
+    btn.id = `kb-${k}`;
+    btn.textContent = k;
+    btn.onclick = () => selectK(k);
+    container.appendChild(btn);
+  });
+}
+
+function selectK(k) {
+  currentK = k;
+  const col = KCOLORS[k];
+
+  // Update button states
+  KLIST.forEach(ki => {
+    const btn = document.getElementById(`kb-${ki}`);
+    if (ki === k) {
+      btn.classList.add('active');
+      btn.style.background = col;
+    } else {
+      btn.classList.remove('active');
+      btn.style.background = '';
+    }
+  });
+
+  drawWave(k);
+  drawError(k);
+  updateMetrics(k);
+  highlightCompareBars(k);
+}
+
+// ── Resize handler ─────────────────────────────────────
+function onResize() {
+  drawWave(currentK);
+  drawError(currentK);
+}
+
+// ── Init ───────────────────────────────────────────────
+buildKButtons();
+buildCompareBars();
+window.addEventListener('resize', onResize);
+setTimeout(() => { selectK(4); }, 60);
+</script>
+</body>
+</html>
