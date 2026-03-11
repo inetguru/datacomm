@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amplitude Modulation — Interactive Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --bg:       #fafaf8;
+  --surf:     #ffffff;
+  --border:   #e8e4dc;
+  --border2:  #d4cfc5;
+
+  --c1:  #1d4ed8;   /* carrier — blue */
+  --c2:  #b91c1c;   /* modulator — red */
+  --c3:  #6d28d9;   /* AM output — purple */
+  --env: rgba(109,40,217,0.12); /* envelope fill */
+
+  --text:   #1c1917;
+  --muted:  #78716c;
+  --subtle: #a8a29e;
+
+  --good:   #15803d;
+  --grid:   rgba(180,174,164,0.45);
+  --zero:   rgba(140,134,124,0.5);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding: 36px 24px 64px;
+}
+
+/* ── Header ── */
+header {
+  max-width: 1100px;
+  margin: 0 auto 32px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  margin-bottom: 6px;
+}
+
+h1 {
+  font-size: clamp(1.7rem, 4vw, 2.6rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+h1 em { font-style: italic; color: var(--c3); }
+
+.tagline {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Sound toggle button */
+.sound-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 9px 18px;
+  border: 1.5px solid var(--border2);
+  border-radius: 999px;
+  background: var(--surf);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.sound-btn:hover { border-color: var(--c3); color: var(--c3); }
+.sound-btn.active { background: var(--c3); border-color: var(--c3); color: #fff; }
+
+.sound-icon { font-size: 1rem; }
+
+/* ── Main layout ── */
+.main { max-width: 1100px; margin: 0 auto; display: grid; gap: 12px; }
+
+/* ── Canvas panels ── */
+.wave-panel {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.wave-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wave-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.tag-c1 { background: rgba(29,78,216,0.1);  color: var(--c1); }
+.tag-c2 { background: rgba(185,28,28,0.1);  color: var(--c2); }
+.tag-c3 { background: rgba(109,40,217,0.1); color: var(--c3); }
+
+.wave-eq {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--muted);
+  flex: 1;
+}
+
+.wave-freq-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--subtle);
+  margin-left: auto;
+}
+
+canvas.wave-cv {
+  width: 100%;
+  display: block;
+  background: #fdfcfa;
+  border: none;
+  border-radius: 0;
+  cursor: crosshair;
+}
+
+/* ── Controls ── */
+.controls-panel {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+@media (max-width: 640px) { .controls-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .controls-grid { grid-template-columns: 1fr 1fr; } }
+
+.ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ctrl-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.ctrl-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ctrl-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%; height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  transition: transform 0.12s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+
+#slF1::-webkit-slider-thumb  { background: var(--c1); }
+#slF2::-webkit-slider-thumb  { background: var(--c2); }
+#slA2::-webkit-slider-thumb  { background: var(--c2); }
+
+.ctrl-ends {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--subtle);
+}
+
+/* ── Frequency spectrum ── */
+.spectrum-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 680px) { .spectrum-row { grid-template-columns: 1fr; } }
+
+/* ── Theory box ── */
+.theory {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 26px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 700px) { .theory { grid-template-columns: 1fr; } }
+
+.th-block {}
+.th-head {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  margin-bottom: 8px;
+}
+.th-body {
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.th-body strong { color: var(--text); font-weight: 600; }
+.th-formula {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.74rem;
+  background: #f5f3ef;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--c3);
+  border-radius: 4px;
+  padding: 9px 12px;
+  margin-top: 10px;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+/* ── Sideband indicator ── */
+.sideband-info {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.sb-pill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.sb-carrier { border-color: rgba(29,78,216,0.4); color: var(--c1); background: rgba(29,78,216,0.06); }
+.sb-upper   { border-color: rgba(109,40,217,0.4); color: var(--c3); background: rgba(109,40,217,0.06); }
+.sb-lower   { border-color: rgba(185,28,28,0.4); color: var(--c2); background: rgba(185,28,28,0.06); }
+
+footer {
+  max-width: 1100px;
+  margin: 32px auto 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--subtle);
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Signal Processing — Interactive Demo</div>
+    <h1>Amplitude <em>Modulation</em></h1>
+    <p class="tagline">Multiply a carrier wave by a cosine amplitude envelope and hear the result</p>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <button class="sound-btn active" id="animBtn" onclick="toggleAnim()">
+      <span class="sound-icon">▶</span>
+      <span id="animLabel">Animation ON</span>
+    </button>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">
+      <span class="sound-icon">🔇</span>
+      <span id="soundLabel">Sound OFF</span>
+    </button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Wave 1: Carrier -->
+  <div class="wave-panel">
+    <div class="wave-header">
+      <span class="wave-tag tag-c1">Carrier</span>
+      <span class="wave-eq">y₁ = sin(2π f₁ t)</span>
+      <span class="wave-freq-badge" id="badge1">f₁ = 220 Hz</span>
+    </div>
+    <canvas class="wave-cv" id="cv1" height="110"></canvas>
+  </div>
+
+  <!-- Wave 2: Modulator -->
+  <div class="wave-panel">
+    <div class="wave-header">
+      <span class="wave-tag tag-c2">Modulator</span>
+      <span class="wave-eq">y₂ = 1 + A₂ cos(2π f₂ t)</span>
+      <span class="wave-freq-badge" id="badge2">f₂ = 2 Hz &nbsp;|&nbsp; A₂ = 1.0</span>
+    </div>
+    <canvas class="wave-cv" id="cv2" height="110"></canvas>
+  </div>
+
+  <!-- Wave 3: AM output -->
+  <div class="wave-panel">
+    <div class="wave-header">
+      <span class="wave-tag tag-c3">AM Output</span>
+      <span class="wave-eq">y₁×₂ = sin(2π f₁ t) · (1 + A₂ cos(2π f₂ t))</span>
+      <span class="wave-freq-badge" id="badge3">—</span>
+    </div>
+    <canvas class="wave-cv" id="cv3" height="140"></canvas>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-panel">
+    <div class="controls-grid">
+      <div class="ctrl">
+        <div class="ctrl-top">
+          <span class="ctrl-name" style="color:var(--c1)">Carrier Frequency f₁</span>
+          <span class="ctrl-value" id="vF1" style="color:var(--c1)">220 Hz</span>
+        </div>
+        <input type="range" id="slF1" min="50" max="1200" value="220" step="1">
+        <div class="ctrl-ends"><span>50 Hz</span><span>1200 Hz</span></div>
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-top">
+          <span class="ctrl-name" style="color:var(--c2)">Modulator Frequency f₂</span>
+          <span class="ctrl-value" id="vF2" style="color:var(--c2)">2 Hz</span>
+        </div>
+        <input type="range" id="slF2" min="0.1" max="400" value="2" step="0.1">
+        <div class="ctrl-ends"><span>0.1 Hz</span><span>400 Hz</span></div>
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-top">
+          <span class="ctrl-name" style="color:var(--c2)">Modulation Depth A₂</span>
+          <span class="ctrl-value" id="vA2" style="color:var(--c2)">1.0</span>
+        </div>
+        <input type="range" id="slA2" min="0" max="2" value="1" step="0.01">
+        <div class="ctrl-ends"><span>0 (no mod)</span><span>2.0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spectrum -->
+  <div class="spectrum-row">
+    <div class="wave-panel">
+      <div class="wave-header">
+        <span class="wave-tag tag-c1">Carrier Spectrum</span>
+        <span class="wave-eq">Frequency domain — single tone</span>
+      </div>
+      <canvas class="wave-cv" id="cvSpec1" height="130"></canvas>
+    </div>
+    <div class="wave-panel">
+      <div class="wave-header">
+        <span class="wave-tag tag-c3">AM Output Spectrum</span>
+        <span class="wave-eq">Carrier + upper/lower sidebands</span>
+      </div>
+      <canvas class="wave-cv" id="cvSpec2" height="130"></canvas>
+    </div>
+  </div>
+
+  <!-- Sideband pills -->
+  <div style="padding: 6px 4px;">
+    <div class="sideband-info" id="sbInfo">
+      <span class="sb-pill sb-carrier" id="sbCarrier">Carrier: — Hz</span>
+      <span class="sb-pill sb-upper"   id="sbUpper">USB: — Hz</span>
+      <span class="sb-pill sb-lower"   id="sbLower">LSB: — Hz</span>
+    </div>
+  </div>
+
+  <!-- Theory -->
+  <div class="theory">
+    <div class="th-block">
+      <div class="th-head" style="color:var(--c1)">What is AM?</div>
+      <div class="th-body">
+        <strong>Amplitude Modulation</strong> multiplies a high-frequency <em>carrier</em> signal by a slowly-varying <em>envelope</em>.
+        The result is a wave whose <strong>amplitude varies over time</strong> according to the modulator.
+      </div>
+      <div class="th-formula">y = sin(2π f₁ t) × (1 + A₂ cos(2π f₂ t))</div>
+    </div>
+    <div class="th-block">
+      <div class="th-head" style="color:var(--c2)">Sidebands</div>
+      <div class="th-body">
+        Using a trig identity, the AM signal can be rewritten as a <strong>sum of three sinusoids</strong>:
+      </div>
+      <div class="th-formula">= sin(2π f₁ t)<br>+ (A₂/2) sin(2π(f₁+f₂)t)<br>+ (A₂/2) sin(2π(f₁−f₂)t)</div>
+      <div class="th-body" style="margin-top:8px;">
+        The two extra tones at <strong>f₁ ± f₂</strong> are called <em>sidebands</em>.
+      </div>
+    </div>
+    <div class="th-block">
+      <div class="th-head" style="color:var(--c3)">What you hear</div>
+      <div class="th-body">
+        When f₂ is <strong>very low (< 20 Hz)</strong>, you hear a single note whose loudness <em>trembles</em> at rate f₂.<br><br>
+        When f₂ grows <strong>above ~20 Hz</strong>, the sidebands become audible and you hear <em>two separate tones</em> — like a dial tone.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Amplitude Modulation Interactive Demo &nbsp;|&nbsp; y₁×₂ = sin(2πf₁t)·(1 + A₂cos(2πf₂t))</footer>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────
+let F1 = 220, F2 = 2, A2 = 1.0;
+let soundOn = false;
+let audioCtx = null, oscNode = null, gainNode = null;
+let animId = null;
+let phase = 0;  // for real-time animation
+
+const DPR = window.devicePixelRatio || 1;
+
+// ─── Helpers ─────────────────────────────────────────────────────
+function setupCanvas(id) {
+  const cv = document.getElementById(id);
+  cv.width  = cv.offsetWidth  * DPR;
+  cv.height = cv.offsetHeight * DPR;
+  return cv.getContext('2d');
+}
+
+function drawGrid(ctx, W, H, rows=4, cols=10) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(185,178,165,0.4)';
+  ctx.lineWidth = 1;
+  for (let r = 1; r < rows; r++) {
+    const y = (r / rows) * H;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  for (let c = 1; c < cols; c++) {
+    const x = (c / cols) * W;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  // Zero line
+  ctx.strokeStyle = 'rgba(140,130,115,0.55)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ─── Draw wave 1: carrier ─────────────────────────────────────────
+function drawCarrier(t0) {
+  const ctx = setupCanvas('cv1');
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const mid = H / 2, amp = H * 0.40;
+  const dur = Math.max(4 / F2, 3 / F1, 0.05);
+
+  ctx.fillStyle = '#fdfcfa'; ctx.fillRect(0, 0, W, H);
+  drawGrid(ctx, W, H, 4, 10);
+
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(29,78,216,0.18)';
+  ctx.lineWidth = 0.8;
+  // shade top half
+  for (let i = 0; i <= 500; i++) {
+    const t = t0 + (i / 500) * dur;
+    const y = mid - amp * Math.sin(2 * Math.PI * F1 * t);
+    i === 0 ? ctx.moveTo(0, mid) : null;
+    if (i === 0) ctx.moveTo((i/500)*W, y); else ctx.lineTo((i/500)*W, y);
+  }
+  ctx.lineTo(W, mid); ctx.lineTo(0, mid); ctx.closePath();
+  ctx.fillStyle = 'rgba(29,78,216,0.06)'; ctx.fill();
+
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(29,78,216,0.9)';
+  ctx.lineWidth = 2 * DPR;
+  for (let i = 0; i <= 800; i++) {
+    const t = t0 + (i / 800) * dur;
+    const x = (i / 800) * W;
+    const y = mid - amp * Math.sin(2 * Math.PI * F1 * t);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Labels
+  ctx.font = `${9*DPR}px IBM Plex Mono`;
+  ctx.fillStyle = 'rgba(29,78,216,0.7)';
+  ctx.fillText(`f₁ = ${F1} Hz`, 8*DPR, 14*DPR);
+  ctx.fillStyle = 'rgba(140,130,115,0.6)';
+  ctx.textAlign = 'right';
+  ctx.fillText(`${dur.toFixed(3)} s`, W - 6*DPR, H - 5*DPR);
+  ctx.textAlign = 'left';
+}
+
+// ─── Draw wave 2: modulator ───────────────────────────────────────
+function drawModulator(t0) {
+  const ctx = setupCanvas('cv2');
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const mid = H / 2, amp = H * 0.38;
+  const dur = Math.max(4 / F2, 3 / F1, 0.05);
+
+  ctx.fillStyle = '#fdfcfa'; ctx.fillRect(0, 0, W, H);
+  drawGrid(ctx, W, H, 4, 10);
+
+  // y2 = 1 + A2*cos(2pi*f2*t) — normalize to display: center at 0.5
+  // display: positive means > 1, so map [1-A2, 1+A2] → [mid+amp, mid-amp]
+  const yMap = v => mid - ((v - 1) / Math.max(A2, 0.01)) * amp * 0.85;
+
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(185,28,28,0.85)';
+  ctx.lineWidth = 2 * DPR;
+  for (let i = 0; i <= 600; i++) {
+    const t = t0 + (i / 600) * dur;
+    const v = 1 + A2 * Math.cos(2 * Math.PI * F2 * t);
+    const x = (i / 600) * W;
+    const y = mid - (A2 < 0.01 ? 0 : (v - 1) / A2) * amp * 0.75;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // y = 1 line (equilibrium)
+  ctx.save();
+  ctx.strokeStyle = 'rgba(185,28,28,0.3)';
+  ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  ctx.font = `${9*DPR}px IBM Plex Mono`;
+  ctx.fillStyle = 'rgba(185,28,28,0.7)';
+  ctx.fillText(`f₂ = ${F2.toFixed(1)} Hz   A₂ = ${A2.toFixed(2)}`, 8*DPR, 14*DPR);
+}
+
+// ─── Draw wave 3: AM output ───────────────────────────────────────
+function drawAMOutput(t0) {
+  const ctx = setupCanvas('cv3');
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const mid = H / 2, amp = H * 0.40;
+  const dur = Math.max(4 / F2, 3 / F1, 0.05);
+  const N = 1000;
+
+  ctx.fillStyle = '#fdfcfa'; ctx.fillRect(0, 0, W, H);
+  drawGrid(ctx, W, H, 4, 10);
+
+  // Precompute
+  const xs = [], ys = [], envTop = [], envBot = [];
+  for (let i = 0; i <= N; i++) {
+    const t = t0 + (i / N) * dur;
+    const env = 1 + A2 * Math.cos(2 * Math.PI * F2 * t);
+    const y = Math.sin(2 * Math.PI * F1 * t) * env;
+    xs.push((i / N) * W);
+    ys.push(mid - y * amp);
+    envTop.push(mid - env * amp);
+    envBot.push(mid + env * amp);
+  }
+
+  // Envelope fill
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) ctx[i===0?'moveTo':'lineTo'](xs[i], envTop[i]);
+  for (let i = N; i >= 0; i--) ctx.lineTo(xs[i], envBot[i]);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(109,40,217,0.07)'; ctx.fill();
+
+  // Envelope lines
+  ctx.save();
+  ctx.strokeStyle = 'rgba(109,40,217,0.3)';
+  ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) ctx[i===0?'moveTo':'lineTo'](xs[i], envTop[i]);
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) ctx[i===0?'moveTo':'lineTo'](xs[i], envBot[i]);
+  ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // AM signal
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(109,40,217,0.92)';
+  ctx.lineWidth = 2 * DPR;
+  ctx.shadowColor = 'rgba(109,40,217,0.15)';
+  ctx.shadowBlur = 4;
+  for (let i = 0; i <= N; i++) ctx[i===0?'moveTo':'lineTo'](xs[i], ys[i]);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Modulation index label
+  const modPct = (A2 * 100).toFixed(0);
+  ctx.font = `${9*DPR}px IBM Plex Mono`;
+  ctx.fillStyle = 'rgba(109,40,217,0.7)';
+  ctx.fillText(`Modulation depth: ${modPct}%`, 8*DPR, 14*DPR);
+  ctx.fillStyle = 'rgba(140,130,115,0.55)';
+  ctx.textAlign = 'right';
+  ctx.fillText('— envelope', W - 6*DPR, 14*DPR);
+  ctx.textAlign = 'left';
+}
+
+// ─── Draw spectrum ─────────────────────────────────────────────────
+function drawSpectrum(canvasId, freqs, amps, color, label) {
+  const ctx = setupCanvas(canvasId);
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const padL = 32*DPR, padR = 16*DPR, padT = 16*DPR, padB = 24*DPR;
+  const cW = W - padL - padR, cH = H - padT - padB;
+
+  ctx.fillStyle = '#fdfcfa'; ctx.fillRect(0, 0, W, H);
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(185,178,165,0.35)'; ctx.lineWidth = 1;
+  for (let r = 1; r < 4; r++) {
+    const y = padT + (r/4)*cH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+cW, y); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(140,130,115,0.5)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT+cH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, padT+cH); ctx.lineTo(padL+cW, padT+cH); ctx.stroke();
+
+  if (freqs.length === 0) return;
+
+  // Scale: x from 0 to maxF, y from 0 to 1
+  const maxF = Math.max(...freqs) * 1.4 + 40;
+  const maxA = Math.max(...amps);
+  const fx = f => padL + (f / maxF) * cW;
+  const fy = a => padT + cH - (a / maxA) * cH * 0.88;
+
+  // Frequency markers on x-axis
+  ctx.font = `${7.5*DPR}px IBM Plex Mono`;
+  ctx.fillStyle = 'rgba(120,113,108,0.7)';
+  ctx.textAlign = 'center';
+  const tickF = Math.ceil(maxF / 5 / 50) * 50;
+  for (let f = 0; f <= maxF; f += tickF) {
+    const x = fx(f);
+    ctx.fillText(`${f}`, x, padT + cH + 16*DPR);
+    ctx.save(); ctx.strokeStyle='rgba(185,178,165,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+cH); ctx.stroke(); ctx.restore();
+  }
+  ctx.fillText('Hz', padL + cW + 14*DPR, padT + cH + 16*DPR);
+
+  // Draw bars with glow
+  freqs.forEach((f, i) => {
+    const x = fx(f);
+    const top = fy(amps[i]);
+    const bW = Math.max(3*DPR, cW * 0.018);
+
+    // Glow
+    ctx.save();
+    ctx.shadowColor = color + '55';
+    ctx.shadowBlur = 10;
+    // Bar gradient
+    const grad = ctx.createLinearGradient(0, top, 0, padT+cH);
+    grad.addColorStop(0, color + 'dd');
+    grad.addColorStop(1, color + '33');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - bW/2, top, bW, padT+cH - top);
+    ctx.restore();
+
+    // Freq label above bar
+    ctx.font = `${7.5*DPR}px IBM Plex Mono`;
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(f)}`, x, top - 4*DPR);
+  });
+
+  ctx.font = `${8*DPR}px IBM Plex Mono`;
+  ctx.fillStyle = 'rgba(120,113,108,0.5)';
+  ctx.textAlign = 'left';
+  ctx.fillText(label, padL + 4*DPR, padT + 12*DPR);
+}
+
+// ─── Update sidebands ─────────────────────────────────────────────
+function updateSidebands() {
+  const usb = F1 + F2, lsb = Math.abs(F1 - F2);
+  document.getElementById('sbCarrier').textContent = `Carrier: ${Math.round(F1)} Hz`;
+  document.getElementById('sbUpper').textContent   = `USB: ${Math.round(usb)} Hz`;
+  document.getElementById('sbLower').textContent   = `LSB: ${Math.round(lsb)} Hz`;
+  document.getElementById('badge1').textContent    = `f₁ = ${F1} Hz`;
+  document.getElementById('badge2').textContent    = `f₂ = ${F2.toFixed(1)} Hz  |  A₂ = ${A2.toFixed(2)}`;
+  document.getElementById('badge3').textContent    = `USB: ${Math.round(usb)} Hz  |  LSB: ${Math.round(lsb)} Hz`;
+}
+
+// ─── Redraw all ───────────────────────────────────────────────────
+function redraw(t0 = 0) {
+  drawCarrier(t0);
+  drawModulator(t0);
+  drawAMOutput(t0);
+
+  // Carrier spectrum: single spike at F1
+  drawSpectrum('cvSpec1',
+    [F1], [1.0],
+    '#1d4ed8', 'Carrier spectrum');
+
+  // AM spectrum: F1, F1+F2, F1-F2 with amplitudes 1, A2/2, A2/2
+  const freqsAM = [F1, F1+F2];
+  const ampsAM  = [1.0, A2/2];
+  if (F1 - F2 > 0) { freqsAM.push(F1 - F2); ampsAM.push(A2/2); }
+  drawSpectrum('cvSpec2', freqsAM, ampsAM, '#6d28d9', 'AM output spectrum');
+
+  updateSidebands();
+}
+
+// ─── Animation loop ───────────────────────────────────────────────
+let t0Anim = 0, lastTs = null, animOn = true;
+
+function animate(ts) {
+  if (!lastTs) lastTs = ts;
+  const dt = (ts - lastTs) / 1000;
+  lastTs = ts;
+  t0Anim += dt;
+  redraw(t0Anim);
+  if (animOn) animId = requestAnimationFrame(animate);
+}
+
+function toggleAnim() {
+  animOn = !animOn;
+  const btn   = document.getElementById('animBtn');
+  const label = document.getElementById('animLabel');
+  const icon  = btn.querySelector('.sound-icon');
+  if (animOn) {
+    btn.classList.add('active');
+    icon.textContent  = '▶';
+    label.textContent = 'Animation ON';
+    lastTs = null;           // reset timestamp to avoid dt jump
+    animId = requestAnimationFrame(animate);
+  } else {
+    btn.classList.remove('active');
+    icon.textContent  = '⏸';
+    label.textContent = 'Animation OFF';
+    cancelAnimationFrame(animId);
+    redraw(t0Anim);          // draw once at current frozen time
+  }
+}
+
+// ─── Audio (Web Audio API) ────────────────────────────────────────
+function buildAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // Stop existing
+  if (oscNode) { oscNode.stop(); oscNode.disconnect(); }
+  if (gainNode) gainNode.disconnect();
+
+  // Carrier oscillator
+  oscNode = audioCtx.createOscillator();
+  oscNode.type = 'sine';
+  oscNode.frequency.value = F1;
+
+  // Modulator oscillator → gainNode (amplitude)
+  const modOsc = audioCtx.createOscillator();
+  modOsc.type = 'sine';
+  modOsc.frequency.value = F2;
+
+  // GainNode for AM
+  gainNode = audioCtx.createGain();
+  gainNode.gain.value = 1.0;
+
+  // Modulation depth via GainNode
+  const modGain = audioCtx.createGain();
+  modGain.gain.value = A2;
+
+  // DC offset (the "1 +" part)
+  const dcOsc = audioCtx.createConstantSource();
+  dcOsc.offset.value = 1.0;
+
+  // Route: modOsc → modGain → gainNode.gain
+  const modGainNode = audioCtx.createGain();
+  modGainNode.gain.value = A2;
+  modOsc.connect(modGainNode);
+  modGainNode.connect(gainNode.gain);
+  dcOsc.offset.value = 1.0;
+
+  // Carrier → gain → master gain → output
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.35;
+  oscNode.connect(gainNode);
+  gainNode.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+
+  oscNode.start();
+  modOsc.start();
+  dcOsc.start();
+
+  // Store refs for live update
+  window._amAudio = { oscNode, modOsc, modGainNode, gainNode, masterGain, dcOsc };
+}
+
+function updateAudio() {
+  if (!soundOn || !window._amAudio) return;
+  const { oscNode, modOsc, modGainNode } = window._amAudio;
+  oscNode.frequency.setTargetAtTime(F1, audioCtx.currentTime, 0.02);
+  modOsc.frequency.setTargetAtTime(F2, audioCtx.currentTime, 0.02);
+  modGainNode.gain.setTargetAtTime(A2, audioCtx.currentTime, 0.02);
+}
+
+function stopAudio() {
+  if (window._amAudio) {
+    try {
+      window._amAudio.oscNode.stop();
+      window._amAudio.modOsc.stop();
+      window._amAudio.dcOsc.stop();
+    } catch(e) {}
+    window._amAudio = null;
+  }
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  const btn   = document.getElementById('soundBtn');
+  const label = document.getElementById('soundLabel');
+  const icon  = btn.querySelector('.sound-icon');
+  if (soundOn) {
+    btn.classList.add('active');
+    icon.textContent  = '🔊';
+    label.textContent = 'Sound ON';
+    buildAudio();
+  } else {
+    btn.classList.remove('active');
+    icon.textContent  = '🔇';
+    label.textContent = 'Sound OFF';
+    stopAudio();
+  }
+}
+
+// ─── Slider bindings ──────────────────────────────────────────────
+document.getElementById('slF1').addEventListener('input', e => {
+  F1 = +e.target.value;
+  document.getElementById('vF1').textContent = `${F1} Hz`;
+  updateAudio();
+  if (!animOn) redraw(t0Anim);
+});
+document.getElementById('slF2').addEventListener('input', e => {
+  F2 = +e.target.value;
+  document.getElementById('vF2').textContent = `${F2.toFixed(1)} Hz`;
+  updateAudio();
+  if (!animOn) redraw(t0Anim);
+});
+document.getElementById('slA2').addEventListener('input', e => {
+  A2 = +e.target.value;
+  document.getElementById('vA2').textContent = A2.toFixed(2);
+  updateAudio();
+  if (!animOn) redraw(t0Anim);
+});
+
+// ─── Resize ───────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  // canvases are resized inside setupCanvas on each draw
+});
+
+// ─── Init ─────────────────────────────────────────────────────────
+animId = requestAnimationFrame(animate);
+</script>
+</body>
+</html>
