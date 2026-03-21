@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sub-1 GHz & 황금 주파수 대역</title>
+  <style>
+    :root {
+      --primary: #1a2e5a;
+      --accent: #2e7dcc;
+      --gold: #f0a500;
+      --gold-light: #fff8e7;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1e2532;
+      --muted: #6b7a99;
+      --border: #dce4f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #0d1f45 0%, #1a4080 50%, #1a6a9e 100%);
+      color: #fff;
+      padding: 72px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 40%, rgba(46,125,204,.35) 0%, transparent 65%),
+                  radial-gradient(ellipse at 20% 80%, rgba(240,165,0,.15) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .wave-bg {
+      position: absolute; bottom: -2px; left: 0; right: 0;
+      height: 60px; background: var(--bg);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(240,165,0,.2); border: 1px solid rgba(240,165,0,.5);
+      color: #ffd770; font-size: .78rem; font-weight: 700;
+      letter-spacing: .08em; padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(1.9rem, 5vw, 3.2rem); font-weight: 800;
+      line-height: 1.2; margin-bottom: 16px; letter-spacing: -.02em;
+    }
+    .hero h1 span { color: #f0a500; }
+    .hero p { max-width: 580px; margin: 0 auto; color: rgba(255,255,255,.75); font-size: 1.05rem; }
+
+    /* Layout */
+    .container { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 64px 0; }
+    .section + .section { border-top: 1px solid var(--border); }
+    .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 36px; }
+    .section-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; flex-shrink: 0;
+    }
+    .icon-blue { background: #e7f2fb; }
+    .icon-gold { background: var(--gold-light); }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+    .section-header p { font-size: .92rem; color: var(--muted); margin-top: 2px; }
+
+    /* Cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px 24px; transition: box-shadow .2s, transform .2s;
+    }
+    .card:hover { box-shadow: 0 8px 28px rgba(26,46,90,.1); transform: translateY(-3px); }
+    .card-icon { font-size: 2rem; margin-bottom: 14px; }
+    .card h3 { font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    .card p { font-size: .92rem; color: var(--muted); }
+
+    /* Illustration box */
+    .illus-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 32px 24px; margin-bottom: 36px;
+      display: flex; justify-content: center; overflow: hidden;
+    }
+
+    /* Char list */
+    .char-list { display: flex; flex-direction: column; gap: 16px; }
+    .char-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 4px solid var(--accent); border-radius: 12px;
+      padding: 20px 22px; display: flex; gap: 18px; align-items: flex-start;
+    }
+    .char-num {
+      background: var(--accent); color: #fff; width: 32px; height: 32px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .9rem; flex-shrink: 0; margin-top: 2px;
+    }
+    .char-body h3 { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .char-body p { font-size: .92rem; color: var(--muted); }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tag { background: #eef5fd; color: var(--accent); font-size: .78rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+
+    /* Tech grid */
+    .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+    .tech-pill {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 18px 20px; display: flex; align-items: center; gap: 14px; transition: box-shadow .2s;
+    }
+    .tech-pill:hover { box-shadow: 0 4px 16px rgba(26,46,90,.08); }
+    .tech-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .tech-pill span { font-weight: 700; font-size: .95rem; }
+    .tech-pill .tech-sub { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+    /* Limits */
+    .limit-list { display: flex; flex-direction: column; gap: 12px; }
+    .limit-item {
+      background: #fff8f5; border: 1px solid #f5d6c8; border-radius: 10px;
+      padding: 14px 18px; display: flex; align-items: flex-start; gap: 12px;
+      font-size: .93rem; color: var(--text);
+    }
+    .limit-item::before { content: '⚠'; font-size: 1.1rem; flex-shrink: 0; }
+
+    /* Use cases */
+    .use-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .use-card {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e8f3fd 100%);
+      border: 1px solid #c9e0f7; border-radius: 14px; padding: 24px 20px; text-align: center;
+    }
+    .use-card .use-icon { font-size: 2.2rem; margin-bottom: 10px; }
+    .use-card h4 { font-size: .95rem; font-weight: 700; color: var(--primary); }
+
+    /* Golden hero */
+    .golden-hero {
+      background: linear-gradient(135deg, #3a2200 0%, #7a4700 50%, #b06a00 100%);
+      border-radius: 20px; padding: 48px 40px; color: #fff;
+      position: relative; overflow: hidden; margin-bottom: 40px;
+    }
+    .golden-hero::before {
+      content: '★'; position: absolute; right: 40px; top: 20px;
+      font-size: 9rem; color: rgba(255,255,255,.06); line-height: 1;
+    }
+    .golden-hero h2 { font-size: 1.7rem; font-weight: 800; margin-bottom: 12px; }
+    .golden-hero h2 span { color: #ffd55a; }
+    .golden-hero p { color: rgba(255,255,255,.8); max-width: 600px; font-size: 1rem; }
+    .golden-badge {
+      display: inline-block; background: rgba(255,213,90,.2); border: 1px solid rgba(255,213,90,.4);
+      color: #ffd55a; font-size: .78rem; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 16px;
+    }
+    .golden-range-box {
+      margin-top: 24px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 12px; padding: 16px 22px; display: inline-flex;
+      align-items: center; gap: 14px; font-size: 1.05rem; font-weight: 700; color: #ffd55a;
+    }
+
+    /* Table */
+    .tradeoff-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); }
+    thead { background: var(--primary); color: #fff; }
+    thead th { padding: 14px 20px; text-align: center; font-size: .88rem; font-weight: 700; }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f7faff; }
+    tbody tr.highlight { background: var(--gold-light); }
+    tbody tr.highlight td { font-weight: 700; }
+    td { padding: 14px 20px; font-size: .93rem; text-align: center; }
+    td:first-child { text-align: left; font-weight: 600; }
+    .badge-ex   { background:#d4f0e0; color:#1e7d4a; }
+    .badge-mod  { background:#fdecd4; color:#b35e00; }
+    .badge-poor { background:#fddcdc; color:#a01010; }
+    .badge-low  { background:#fdecd4; color:#b35e00; }
+    .badge-hi   { background:#d4e8fd; color:#1452a0; }
+    .badge { display: inline-block; padding: 3px 11px; border-radius: 20px; font-size: .82rem; font-weight: 700; }
+
+    /* Why golden */
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+    .why-card {
+      background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--gold);
+      border-radius: 14px; padding: 22px 20px; display: flex; gap: 12px; align-items: flex-start;
+    }
+    .why-check {
+      background: #fff3cd; color: var(--gold); width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .85rem; flex-shrink: 0; margin-top: 1px;
+    }
+    .why-card p { font-size: .93rem; color: var(--text); font-weight: 500; }
+
+    /* Band stack */
+    .band-stack { display: flex; flex-direction: column; gap: 16px; }
+    .band-row {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 22px 24px; display: flex; gap: 20px; align-items: flex-start;
+    }
+    .band-label { min-width: 160px; font-weight: 700; font-size: .95rem; color: var(--primary); }
+    .band-label small { display: block; font-size: .78rem; font-weight: 500; color: var(--muted); margin-top: 2px; }
+    .band-desc { font-size: .92rem; color: var(--muted); }
+    .band-desc strong { color: var(--text); }
+    .band-indicator { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .ind-sub { background: var(--gold); }
+    .ind-mid { background: var(--accent); }
+    .ind-mm  { background: #9b59b6; }
+
+    /* Insight */
+    .insight-box {
+      background: linear-gradient(135deg, #1a2e5a 0%, #243a72 100%);
+      border-radius: 18px; padding: 40px 44px; text-align: center; color: #fff;
+    }
+    .insight-box .icon { font-size: 2.8rem; margin-bottom: 16px; }
+    .insight-box blockquote {
+      font-size: 1.15rem; font-style: italic; font-weight: 600; color: #ffd55a;
+      max-width: 680px; margin: 0 auto 20px; line-height: 1.6;
+    }
+    .insight-box p { color: rgba(255,255,255,.7); font-size: .95rem; }
+
+    /* Takeaway */
+    .takeaway-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+    .takeaway-card { border-radius: 14px; padding: 28px 24px; }
+    .takeaway-card.blue { background: linear-gradient(135deg, #e8f3fd 0%, #d2e9fb 100%); border: 1px solid #b0d4f5; }
+    .takeaway-card.gold { background: linear-gradient(135deg, var(--gold-light) 0%, #fdebd4 100%); border: 1px solid #f5d58a; }
+    .takeaway-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--primary); }
+    .takeaway-list li {
+      list-style: none; font-size: .92rem; padding: 6px 0;
+      display: flex; align-items: center; gap: 8px; color: var(--text);
+      border-bottom: 1px dashed rgba(0,0,0,.08);
+    }
+    .takeaway-list li:last-child { border-bottom: none; }
+    .takeaway-list li::before { content: '▸'; color: var(--accent); font-size: .8rem; }
+
+    footer {
+      background: var(--primary); color: rgba(255,255,255,.55);
+      text-align: center; padding: 28px 24px; font-size: .85rem;
+    }
+    footer strong { color: rgba(255,255,255,.85); }
+
+    @media (max-width: 600px) {
+      .golden-hero { padding: 36px 24px; }
+      .insight-box { padding: 32px 24px; }
+      .band-row { flex-direction: column; gap: 10px; }
+      .illus-box svg { width: 100%; height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-badge">RF / 무선 통신 기술</div>
+  <h1>Sub-1 GHz 대역 &amp;<br><span>황금 주파수 대역</span></h1>
+  <p>글로벌 IoT, LPWAN, 스마트 인프라를 구동하는 핵심 주파수 스펙트럼의 모든 것</p>
+  <div class="wave-bg"></div>
+</header>
+
+<main class="container">
+
+  <!-- ══════════ SECTION 1 · Sub-1 GHz란? ══════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">📡</div>
+      <div>
+        <h2>Sub-1 GHz란?</h2>
+        <p>광역 저전력 무선 통신의 근간이 되는 스펙트럼</p>
+      </div>
+    </div>
+
+    <!-- 일러스트: 주파수 스펙트럼 -->
+    <div class="illus-box">
+      <svg viewBox="0 0 820 200" width="820" height="200" xmlns="http://www.w3.org/2000/svg" font-family="'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif">
+        <!-- 배경 그라디언트 -->
+        <defs>
+          <linearGradient id="specGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#1a4080;stop-opacity:1"/>
+            <stop offset="20%" style="stop-color:#2e7dcc;stop-opacity:1"/>
+            <stop offset="45%" style="stop-color:#27ae60;stop-opacity:1"/>
+            <stop offset="70%" style="stop-color:#f0a500;stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1"/>
+          </linearGradient>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#1a2e5a"/>
+          </marker>
+        </defs>
+
+        <!-- 스펙트럼 바 -->
+        <rect x="30" y="70" width="760" height="36" rx="8" fill="url(#specGrad)" opacity="0.9"/>
+
+        <!-- Sub-1GHz 강조 박스 -->
+        <rect x="30" y="62" width="152" height="52" rx="8" fill="none" stroke="#f0a500" stroke-width="3" stroke-dasharray="6,3"/>
+        <rect x="30" y="62" width="152" height="52" rx="8" fill="#f0a500" opacity="0.12"/>
+
+        <!-- 주파수 레이블 -->
+        <text x="50" y="58" font-size="11" fill="#1a2e5a" font-weight="700">300 MHz</text>
+        <text x="174" y="58" font-size="11" fill="#1a2e5a" font-weight="700">1 GHz</text>
+        <text x="330" y="58" font-size="11" fill="#1a2e5a" font-weight="700">3 GHz</text>
+        <text x="520" y="58" font-size="11" fill="#1a2e5a" font-weight="700">6 GHz</text>
+        <text x="680" y="58" font-size="11" fill="#1a2e5a" font-weight="700">24 GHz+</text>
+
+        <!-- 구분선 -->
+        <line x1="182" y1="55" x2="182" y2="118" stroke="#1a2e5a" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+        <line x1="380" y1="55" x2="380" y2="118" stroke="#1a2e5a" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+        <line x1="570" y1="55" x2="570" y2="118" stroke="#1a2e5a" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+
+        <!-- 대역명 -->
+        <text x="106" y="96" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">Sub-1 GHz</text>
+        <text x="281" y="96" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">셀룰러 저대역</text>
+        <text x="475" y="96" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">중대역 (Wi-Fi/5G)</text>
+        <text x="695" y="96" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">mmWave</text>
+
+        <!-- 황금 대역 표시 -->
+        <text x="106" y="132" text-anchor="middle" font-size="10" fill="#b36a00" font-weight="700">⭐ 황금 대역</text>
+
+        <!-- 화살표 + 설명 -->
+        <line x1="106" y1="140" x2="106" y2="156" stroke="#f0a500" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="106" y="175" text-anchor="middle" font-size="10" fill="#1a2e5a">IoT / LPWAN 최적</text>
+
+        <text x="695" y="175" text-anchor="middle" font-size="10" fill="#1a2e5a">초고속 / 단거리</text>
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">📶</div>
+        <h3>주파수 정의</h3>
+        <p>일반 셀룰러·Wi-Fi 대역보다 낮은 <strong>300 MHz ~ 1 GHz</strong> 범위의 전자기 스펙트럼입니다.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <h3>주요 활용 분야</h3>
+        <p><strong>LPWAN</strong>, IoT 센서 네트워크, 산업용 무선 제어 시스템에서 전 세계적으로 광범위하게 채택되고 있습니다.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔋</div>
+        <h3>설계 철학</h3>
+        <p><strong>장거리 + 저전력</strong>의 균형을 최우선으로 설계되어, 단 한 번의 배터리 교체로 수년간 운용이 가능합니다.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════ SECTION 2 · 핵심 특성 ══════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">🔑</div>
+      <div>
+        <h2>핵심 특성</h2>
+        <p>Sub-1 GHz를 특별하게 만드는 세 가지 물리적 장점</p>
+      </div>
+    </div>
+
+    <!-- 일러스트: 세 가지 특성 비교 다이어그램 -->
+    <div class="illus-box">
+      <svg viewBox="0 0 820 220" width="820" height="220" xmlns="http://www.w3.org/2000/svg" font-family="'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif">
+        <defs>
+          <radialGradient id="waveGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" style="stop-color:#2e7dcc;stop-opacity:0.15"/>
+            <stop offset="100%" style="stop-color:#2e7dcc;stop-opacity:0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- 장거리 통신 패널 -->
+        <rect x="10" y="10" width="240" height="200" rx="14" fill="#f0f7ff" stroke="#c9e0f7" stroke-width="1.5"/>
+        <text x="130" y="36" text-anchor="middle" font-size="13" fill="#1a2e5a" font-weight="800">① 장거리 통신</text>
+        <!-- 기지국 아이콘 -->
+        <line x1="70" y1="150" x2="70" y2="95" stroke="#1a4080" stroke-width="3"/>
+        <line x1="70" y1="95" x2="55" y2="115" stroke="#1a4080" stroke-width="2"/>
+        <line x1="70" y1="95" x2="85" y2="115" stroke="#1a4080" stroke-width="2"/>
+        <rect x="62" y="150" width="16" height="18" rx="2" fill="#1a4080"/>
+        <!-- 전파 파동 -->
+        <path d="M 80 110 Q 110 90 130 110" fill="none" stroke="#2e7dcc" stroke-width="1.8" opacity="0.9"/>
+        <path d="M 80 100 Q 120 70 155 100" fill="none" stroke="#2e7dcc" stroke-width="1.5" opacity="0.65"/>
+        <path d="M 80 90  Q 130 50 180 90"  fill="none" stroke="#2e7dcc" stroke-width="1.2" opacity="0.4"/>
+        <!-- 수신 장치 -->
+        <rect x="170" y="140" width="22" height="28" rx="4" fill="#27ae60"/>
+        <rect x="174" y="145" width="14" height="10" rx="2" fill="#fff" opacity="0.6"/>
+        <!-- 거리 표시 -->
+        <line x1="70" y1="175" x2="192" y2="175" stroke="#2e7dcc" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <text x="131" y="191" text-anchor="middle" font-size="11" fill="#2e7dcc" font-weight="700">수 km 도달 가능</text>
+
+        <!-- 투과 성능 패널 -->
+        <rect x="290" y="10" width="240" height="200" rx="14" fill="#f0fff4" stroke="#a8e6c0" stroke-width="1.5"/>
+        <text x="410" y="36" text-anchor="middle" font-size="13" fill="#1a5a2e" font-weight="800">② 우수한 투과 성능</text>
+        <!-- 건물 -->
+        <rect x="330" y="60" width="60" height="110" rx="4" fill="#b0c8e8" stroke="#7a9cc8" stroke-width="1.5"/>
+        <rect x="340" y="75" width="12" height="15" rx="2" fill="#fff" opacity="0.6"/>
+        <rect x="360" y="75" width="12" height="15" rx="2" fill="#fff" opacity="0.6"/>
+        <rect x="340" y="100" width="12" height="15" rx="2" fill="#fff" opacity="0.6"/>
+        <rect x="360" y="100" width="12" height="15" rx="2" fill="#fff" opacity="0.6"/>
+        <rect x="347" y="130" width="16" height="40" rx="2" fill="#8aafcc"/>
+        <!-- 전파 통과 화살표 -->
+        <line x1="315" y1="115" x2="405" y2="115" stroke="#27ae60" stroke-width="2.5" marker-end="url(#arr2)"/>
+        <text x="360" y="108" text-anchor="middle" font-size="9" fill="#27ae60" font-weight="700">투과</text>
+        <!-- 수신 -->
+        <circle cx="435" cy="115" r="16" fill="#27ae60" opacity="0.15"/>
+        <circle cx="435" cy="115" r="10" fill="#27ae60" opacity="0.3"/>
+        <circle cx="435" cy="115" r="5" fill="#27ae60"/>
+        <text x="410" y="191" text-anchor="middle" font-size="11" fill="#1a5a2e" font-weight="700">벽·건물 관통</text>
+
+        <!-- 저전력 패널 -->
+        <rect x="570" y="10" width="240" height="200" rx="14" fill="#fff8e7" stroke="#f5d58a" stroke-width="1.5"/>
+        <text x="690" y="36" text-anchor="middle" font-size="13" fill="#7a4700" font-weight="800">③ 저전력 소비</text>
+        <!-- 배터리 아이콘 -->
+        <rect x="655" y="60" width="70" height="36" rx="6" fill="#e0e0e0" stroke="#bbb" stroke-width="1.5"/>
+        <rect x="725" y="70" width="8" height="16" rx="3" fill="#bbb"/>
+        <rect x="657" y="62" width="54" height="32" rx="4" fill="#27ae60"/>
+        <text x="684" y="83" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">83%</text>
+        <!-- 시간 막대 그래프 -->
+        <text x="690" y="118" text-anchor="middle" font-size="10" fill="#7a4700">배터리 수명</text>
+        <!-- Sub-1 GHz 막대 -->
+        <rect x="620" y="130" width="30" height="55" rx="4" fill="#f0a500" opacity="0.85"/>
+        <text x="635" y="125" text-anchor="middle" font-size="9" fill="#7a4700" font-weight="700">10년+</text>
+        <text x="635" y="195" text-anchor="middle" font-size="9" fill="#7a4700">Sub-GHz</text>
+        <!-- 고주파 막대 -->
+        <rect x="668" y="163" width="30" height="22" rx="4" fill="#2e7dcc" opacity="0.7"/>
+        <text x="683" y="158" text-anchor="middle" font-size="9" fill="#2e7dcc" font-weight="700">2~3년</text>
+        <text x="683" y="195" text-anchor="middle" font-size="9" fill="#2e7dcc">중대역</text>
+        <!-- mmWave 막대 -->
+        <rect x="716" y="175" width="30" height="10" rx="4" fill="#9b59b6" opacity="0.7"/>
+        <text x="731" y="170" text-anchor="middle" font-size="9" fill="#9b59b6" font-weight="700">&lt;1년</text>
+        <text x="731" y="195" text-anchor="middle" font-size="9" fill="#9b59b6">mmWave</text>
+
+        <!-- 화살표 마커2 -->
+        <defs>
+          <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#27ae60"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="char-list">
+      <div class="char-item">
+        <div class="char-num">1</div>
+        <div class="char-body">
+          <h3>장거리 통신</h3>
+          <p>낮은 주파수는 자유 공간 경로 손실을 크게 줄여줍니다. Sub-1 GHz 링크는 중계기 없이도 <strong>수 킬로미터</strong>에 달하는 안정적인 통신을 지원하므로, 도시 규모의 스마트 계량이나 농촌 지역 모니터링에 이상적입니다.</p>
+          <div class="tag-list">
+            <span class="tag">km급 통신 거리</span>
+            <span class="tag">LPWAN 광역 커버리지</span>
+            <span class="tag">낮은 경로 손실</span>
+          </div>
+        </div>
+      </div>
+      <div class="char-item">
+        <div class="char-num">2</div>
+        <div class="char-body">
+          <h3>우수한 투과 성능</h3>
+          <p>긴 파장은 장애물을 잘 회절하고 고밀도 재질을 훨씬 효과적으로 통과합니다. Sub-1 GHz 신호는 <strong>벽, 다층 건물, 울창한 수목</strong>을 관통하여 다른 대역이 실패하는 실내 및 지하 환경에서도 안정적인 통신을 제공합니다.</p>
+          <div class="tag-list">
+            <span class="tag">건물 내부 투과</span>
+            <span class="tag">지하 커버리지</span>
+            <span class="tag">비가시선(NLoS) 성능</span>
+          </div>
+        </div>
+      </div>
+      <div class="char-item">
+        <div class="char-num">3</div>
+        <div class="char-body">
+          <h3>저전력 소비</h3>
+          <p>낮은 주파수에서의 단순한 라디오 설계는 <strong>초저 송신 전력</strong>을 가능하게 합니다. IoT 단말은 간헐적으로 송신하고 대부분의 시간을 슬립 상태로 유지하여, 배터리 구동 기기가 <strong>5~10년 이상</strong> 지속적으로 동작할 수 있습니다.</p>
+          <div class="tag-list">
+            <span class="tag">다년간 배터리 수명</span>
+            <span class="tag">슬립 듀티 사이클</span>
+            <span class="tag">에너지 하베스팅 호환</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════ SECTION 3 · 주요 기술 ══════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">📊</div>
+      <div>
+        <h2>주요 기술</h2>
+        <p>Sub-1 GHz 스펙트럼 기반의 검증된 통신 표준</p>
+      </div>
+    </div>
+
+    <!-- 일러스트: 기술 생태계 다이어그램 -->
+    <div class="illus-box">
+      <svg viewBox="0 0 760 180" width="760" height="180" xmlns="http://www.w3.org/2000/svg" font-family="'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif">
+        <!-- 중앙 허브 -->
+        <circle cx="380" cy="90" r="46" fill="#1a2e5a" opacity="0.9"/>
+        <text x="380" y="85" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">Sub-1 GHz</text>
+        <text x="380" y="101" text-anchor="middle" font-size="10" fill="#ffd770">기술 생태계</text>
+
+        <!-- 연결선 -->
+        <line x1="334" y1="90" x2="220" y2="60"  stroke="#2e7dcc" stroke-width="1.8" stroke-dasharray="5,3" opacity="0.7"/>
+        <line x1="334" y1="90" x2="220" y2="130" stroke="#2e7dcc" stroke-width="1.8" stroke-dasharray="5,3" opacity="0.7"/>
+        <line x1="426" y1="90" x2="540" y2="60"  stroke="#2e7dcc" stroke-width="1.8" stroke-dasharray="5,3" opacity="0.7"/>
+        <line x1="426" y1="90" x2="540" y2="130" stroke="#2e7dcc" stroke-width="1.8" stroke-dasharray="5,3" opacity="0.7"/>
+
+        <!-- LoRa / LoRaWAN -->
+        <rect x="90" y="30" width="140" height="56" rx="12" fill="#e7f2fb" stroke="#2e7dcc" stroke-width="2"/>
+        <text x="160" y="56" text-anchor="middle" font-size="13" fill="#1a2e5a" font-weight="800">LoRa / LoRaWAN</text>
+        <text x="160" y="74" text-anchor="middle" font-size="10" fill="#6b7a99">장거리 확산 스펙트럼</text>
+
+        <!-- Sigfox -->
+        <rect x="90" y="100" width="140" height="56" rx="12" fill="#e7f2fb" stroke="#2e7dcc" stroke-width="2"/>
+        <text x="160" y="126" text-anchor="middle" font-size="13" fill="#1a2e5a" font-weight="800">Sigfox</text>
+        <text x="160" y="144" text-anchor="middle" font-size="10" fill="#6b7a99">초협대역(UNB) LPWAN</text>
+
+        <!-- NB-IoT -->
+        <rect x="532" y="30" width="142" height="56" rx="12" fill="#fff8e7" stroke="#f0a500" stroke-width="2"/>
+        <text x="603" y="56" text-anchor="middle" font-size="13" fill="#1a2e5a" font-weight="800">NB-IoT</text>
+        <text x="603" y="74" text-anchor="middle" font-size="10" fill="#6b7a99">3GPP 표준 셀룰러 IoT</text>
+
+        <!-- Zigbee Sub-GHz -->
+        <rect x="532" y="100" width="142" height="56" rx="12" fill="#fff8e7" stroke="#f0a500" stroke-width="2"/>
+        <text x="603" y="120" text-anchor="middle" font-size="12" fill="#1a2e5a" font-weight="800">Zigbee Sub-GHz</text>
+        <text x="603" y="138" text-anchor="middle" font-size="10" fill="#6b7a99">IEEE 802.15.4g 메시</text>
+      </svg>
+    </div>
+
+    <div class="tech-grid">
+      <div class="tech-pill">
+        <div class="tech-dot"></div>
+        <div>
+          <span>LoRa / LoRaWAN</span>
+          <div class="tech-sub">장거리 확산 스펙트럼 방식</div>
+        </div>
+      </div>
+      <div class="tech-pill">
+        <div class="tech-dot"></div>
+        <div>
+          <span>Sigfox</span>
+          <div class="tech-sub">초협대역(UNB) LPWAN</div>
+        </div>
+      </div>
+      <div class="tech-pill">
+        <div class="tech-dot"></div>
+        <div>
+          <span>NB-IoT (일부 대역)</span>
+          <div class="tech-sub">3GPP 표준 셀룰러 IoT</div>
+        </div>
+      </div>
+      <div class="tech-pill">
+        <div class="tech-dot"></div>
+        <div>
+          <span>Zigbee Sub-GHz</span>
+          <div class="tech-sub">IEEE 802.15.4g 메시 네트워크</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════ SECTION 4 · 제한 사항 ══════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">⚠️</div>
+      <div>
+        <h2>제한 사항</h2>
+        <p>Sub-1 GHz 선택 시 고려해야 할 엔지니어링 트레이드오프</p>
+      </div>
+    </div>
+    <div class="limit-list">
+      <div class="limit-item"><strong>제한된 대역폭 → 낮은 데이터 전송률.</strong>&nbsp; 협소한 채널(일반적으로 125~500 kHz)은 페이로드 크기를 제한하며, 영상·음성·대용량 데이터 전송에는 적합하지 않습니다.</div>
+      <div class="limit-item"><strong>국가별 상이한 스펙트럼 규정.</strong>&nbsp; ISM 대역 할당이 지역마다 다릅니다 — 유럽 868 MHz, 북미 915 MHz, 아시아 920 MHz — 지역 전용 하드웨어가 필요합니다.</div>
+      <div class="limit-item"><strong>혼잡한 ISM 대역에서의 간섭 위험.</strong>&nbsp; 비면허 대역은 리모컨, RFID, 레거시 센서 등 다른 기기와 공유되므로, 밀집 환경에서는 동일 채널 간섭 가능성이 높아집니다.</div>
+    </div>
+  </section>
+
+
+  <!-- ══════════ SECTION 5 · 주요 활용 사례 ══════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-icon icon-blue">🎯</div>
+      <div>
+        <h2>주요 활용 사례</h2>
+        <p>Sub-1 GHz가 가장 큰 가치를 발휘하는 분야</p>
+      </div>
+    </div>
+
+    <!-- 일러스트: 스마트 시티 -->
+    <div class="illus-box">
+      <svg viewBox="0 0 820 200" width="820" height="200" xmlns="http://www.w3.org/2000/svg" font-family="'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif">
+        <defs>
+          <marker id="arr3" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#2e7dcc" opacity="0.6"/>
+          </marker>
+        </defs>
+
+        <!-- 하늘 배경 -->
+        <rect x="0" y="0" width="820" height="200" rx="14" fill="#eef6ff"/>
+        <!-- 지면 -->
+        <rect x="0" y="158" width="820" height="42" rx="0" fill="#c8dcc8" opacity="0.5"/>
+
+        <!-- 기지국 타워 (중앙) -->
+        <line x1="410" y1="30" x2="410" y2="158" stroke="#1a2e5a" stroke-width="4"/>
+        <line x1="410" y1="30" x2="388" y2="70" stroke="#1a2e5a" stroke-width="2.5"/>
+        <line x1="410" y1="30" x2="432" y2="70" stroke="#1a2e5a" stroke-width="2.5"/>
+        <line x1="396" y1="50" x2="424" y2="50" stroke="#1a2e5a" stroke-width="2"/>
+        <rect x="400" y="155" width="20" height="10" rx="3" fill="#1a2e5a"/>
+        <text x="410" y="182" text-anchor="middle" font-size="11" fill="#1a2e5a" font-weight="800">게이트웨이</text>
+
+        <!-- 전파 (반원) -->
+        <path d="M 350 80 Q 410 20 470 80" fill="none" stroke="#2e7dcc" stroke-width="1.5" opacity="0.3" stroke-dasharray="6,3"/>
+        <path d="M 310 100 Q 410 10 510 100" fill="none" stroke="#2e7dcc" stroke-width="1.2" opacity="0.2" stroke-dasharray="6,3"/>
+        <path d="M 260 120 Q 410 0  560 120" fill="none" stroke="#2e7dcc" stroke-width="1" opacity="0.12" stroke-dasharray="6,3"/>
+
+        <!-- 스마트 미터 -->
+        <rect x="80" y="118" width="46" height="38" rx="6" fill="#2e7dcc" opacity="0.85"/>
+        <rect x="86" y="124" width="34" height="18" rx="3" fill="#fff" opacity="0.7"/>
+        <text x="103" y="164" text-anchor="middle" font-size="10" fill="#1a2e5a" font-weight="700">스마트 미터</text>
+        <line x1="126" y1="135" x2="390" y2="80" stroke="#2e7dcc" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.5" marker-end="url(#arr3)"/>
+
+        <!-- 산업 IoT -->
+        <rect x="198" y="110" width="50" height="48" rx="5" fill="#f0a500" opacity="0.85"/>
+        <circle cx="223" cy="128" r="10" fill="#fff" opacity="0.6"/>
+        <line x1="210" y1="128" x2="236" y2="128" stroke="#b36a00" stroke-width="1.5"/>
+        <line x1="223" y1="115" x2="223" y2="141" stroke="#b36a00" stroke-width="1.5"/>
+        <text x="223" y="172" text-anchor="middle" font-size="10" fill="#1a2e5a" font-weight="700">산업용 IoT</text>
+        <line x1="248" y1="128" x2="390" y2="88" stroke="#f0a500" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.5" marker-end="url(#arr3)"/>
+
+        <!-- 스마트 농업 -->
+        <ellipse cx="590" cy="145" rx="22" ry="14" fill="#27ae60" opacity="0.8"/>
+        <rect x="585" y="130" width="10" height="16" rx="2" fill="#1a5a2e"/>
+        <ellipse cx="622" cy="140" rx="18" ry="11" fill="#27ae60" opacity="0.6"/>
+        <rect x="618" y="128" width="8" height="13" rx="2" fill="#1a5a2e"/>
+        <text x="605" y="172" text-anchor="middle" font-size="10" fill="#1a2e5a" font-weight="700">스마트 농업</text>
+        <line x1="580" y1="138" x2="428" y2="90" stroke="#27ae60" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.5" marker-end="url(#arr3)"/>
+
+        <!-- 자산 추적 -->
+        <rect x="700" y="120" width="46" height="36" rx="8" fill="#9b59b6" opacity="0.85"/>
+        <circle cx="723" cy="135" r="10" fill="#fff" opacity="0.5"/>
+        <text x="723" y="139" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">📦</text>
+        <text x="723" y="170" text-anchor="middle" font-size="10" fill="#1a2e5a" font-weight="700">자산 추적</text>
+        <line x1="700" y1="135" x2="430" y2="88" stroke="#9b59b6" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.5" marker-end="url(#arr3)"/>
+      </svg>
+    </div>
+
+    <div class="use-grid">
+      <div class="use-card">
+        <div class="use-icon">💡</div>
+        <h4>스마트 미터링</h4>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🏭</div>
+        <h4>산업용 IoT</h4>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🌾</div>
+        <h4>스마트 농업</h4>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">📦</div>
+        <h4>자산 추적</h4>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════ 황금 주파수 대역 ══════════ -->
+  <section class="section" id="golden">
+    <div class="golden-hero">
+      <div class="golden-badge">★ 황금 주파수 대역 (Golden Frequency Range)</div>
+      <h2><span>황금 주파수 대역</span>이란?</h2>
+      <p>커버리지, 투과성, 데이터 전송률, 전력 효율이라는 네 가지 상충 요소를 가장 균형 있게 충족하는 주파수 대역입니다.</p>
+      <div class="golden-range-box">
+        📍 대표 구간: <strong>700 – 900 MHz (Sub-1 GHz)</strong>
+      </div>
+    </div>
+
+    <!-- 일러스트: 4가지 요소 균형 레이더 차트 -->
+    <div class="illus-box">
+      <svg viewBox="0 0 820 280" width="820" height="280" xmlns="http://www.w3.org/2000/svg" font-family="'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif">
+        <!-- 레이더 차트 (Sub-1 GHz) -->
+        <!-- 배경 격자 -->
+        <g transform="translate(200,140)">
+          <!-- 격자 원 -->
+          <polygon points="0,-80 69,-40 69,40 0,80 -69,40 -69,-40" fill="none" stroke="#dce4f0" stroke-width="1"/>
+          <polygon points="0,-55 47,-27.5 47,27.5 0,55 -47,27.5 -47,-27.5" fill="none" stroke="#dce4f0" stroke-width="1"/>
+          <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="none" stroke="#dce4f0" stroke-width="1"/>
+          <!-- 축선 -->
+          <line x1="0" y1="-80" x2="0" y2="80" stroke="#dce4f0" stroke-width="1"/>
+          <line x1="-69" y1="-40" x2="69" y2="40" stroke="#dce4f0" stroke-width="1"/>
+          <line x1="-69" y1="40" x2="69" y2="-40" stroke="#dce4f0" stroke-width="1"/>
+          <!-- Sub-1 GHz 데이터 (커버리지95, 투과90, 데이터율30, 전력효율88) -->
+          <polygon points="0,-76 62,-27 24,28 0,76 -61,27 -60,-27" fill="#f0a500" fill-opacity="0.25" stroke="#f0a500" stroke-width="2.5"/>
+          <!-- 축 레이블 -->
+          <text y="-90" text-anchor="middle" font-size="11" fill="#1a2e5a" font-weight="700">커버리지</text>
+          <text x="80" y="-38" font-size="11" fill="#1a2e5a" font-weight="700">전력 효율</text>
+          <text x="80" y="52" font-size="11" fill="#1a2e5a" font-weight="700">데이터 전송률</text>
+          <text y="98" text-anchor="middle" font-size="11" fill="#1a2e5a" font-weight="700">투과 성능</text>
+          <text x="-80" y="52" text-anchor="end" font-size="11" fill="#1a2e5a" font-weight="700">데이터 전송률</text>
+          <text x="-80" y="-38" text-anchor="end" font-size="11" fill="#1a2e5a" font-weight="700">전력 효율</text>
+          <!-- 범례 -->
+          <rect x="-80" y="110" width="12" height="12" rx="3" fill="#f0a500" fill-opacity="0.5" stroke="#f0a500" stroke-width="2"/>
+          <text x="-62" y="121" font-size="11" fill="#1a2e5a">Sub-1 GHz (황금 대역)</text>
+        </g>
+
+        <!-- 트레이드오프 설명 -->
+        <g transform="translate(480,30)">
+          <text x="0" y="20" font-size="14" fill="#1a2e5a" font-weight="800">⚖️ 대역별 성능 비교</text>
+
+          <!-- 커버리지 바 -->
+          <text x="0" y="55" font-size="11" fill="#1a2e5a" font-weight="700">커버리지</text>
+          <rect x="0" y="60" width="280" height="18" rx="4" fill="#eee"/>
+          <rect x="0" y="60" width="266" height="18" rx="4" fill="#f0a500" opacity="0.85"/>
+          <rect x="0" y="60" width="200" height="18" rx="4" fill="none"/>
+          <text x="220" y="73" font-size="10" fill="#fff" font-weight="700">Sub-1 GHz ★</text>
+
+          <!-- 투과 바 -->
+          <text x="0" y="98" font-size="11" fill="#1a2e5a" font-weight="700">투과 성능</text>
+          <rect x="0" y="103" width="280" height="18" rx="4" fill="#eee"/>
+          <rect x="0" y="103" width="252" height="18" rx="4" fill="#f0a500" opacity="0.7"/>
+          <text x="200" y="116" font-size="10" fill="#fff" font-weight="700">Sub-1 GHz ★</text>
+
+          <!-- 데이터율 바 -->
+          <text x="0" y="141" font-size="11" fill="#1a2e5a" font-weight="700">데이터 전송률</text>
+          <rect x="0" y="146" width="280" height="18" rx="4" fill="#eee"/>
+          <rect x="0" y="146" width="84" height="18" rx="4" fill="#f0a500" opacity="0.6"/>
+          <rect x="84" y="146" width="140" height="18" rx="4" fill="#2e7dcc" opacity="0.5"/>
+          <rect x="224" y="146" width="56" height="18" rx="4" fill="#9b59b6" opacity="0.5"/>
+          <text x="40" y="159" font-size="9" fill="#7a4700">저</text>
+          <text x="148" y="159" font-size="9" fill="#1452a0" font-weight="600">중</text>
+          <text x="248" y="159" font-size="9" fill="#6a2a90" font-weight="600">고</text>
+
+          <!-- 전력 효율 바 -->
+          <text x="0" y="184" font-size="11" fill="#1a2e5a" font-weight="700">전력 효율 (배터리 수명)</text>
+          <rect x="0" y="189" width="280" height="18" rx="4" fill="#eee"/>
+          <rect x="0" y="189" width="245" height="18" rx="4" fill="#27ae60" opacity="0.7"/>
+          <text x="170" y="202" font-size="10" fill="#fff" font-weight="700">Sub-1 GHz ★</text>
+
+          <!-- 범례 -->
+          <rect x="0" y="225" width="10" height="10" rx="2" fill="#f0a500" opacity="0.8"/>
+          <text x="14" y="234" font-size="10" fill="#1a2e5a">Sub-1 GHz</text>
+          <rect x="90" y="225" width="10" height="10" rx="2" fill="#2e7dcc" opacity="0.7"/>
+          <text x="104" y="234" font-size="10" fill="#1a2e5a">중대역</text>
+          <rect x="160" y="225" width="10" height="10" rx="2" fill="#9b59b6" opacity="0.7"/>
+          <text x="174" y="234" font-size="10" fill="#1a2e5a">mmWave</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Trade-off table -->
+    <div class="section-header" style="margin-top:8px;">
+      <div class="section-icon icon-gold">⚖️</div>
+      <div>
+        <h2>트레이드오프 비교표</h2>
+        <p>주요 성능 지표 기준 주파수 대역별 비교</p>
+      </div>
+    </div>
+
+    <div class="tradeoff-wrap" style="margin-bottom:48px;">
+      <table>
+        <thead>
+          <tr>
+            <th>주파수 대역</th>
+            <th>커버리지</th>
+            <th>투과 성능</th>
+            <th>데이터 전송률</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td>⭐ 저대역 (&lt;1 GHz) — 황금 대역</td>
+            <td><span class="badge badge-ex">우수</span></td>
+            <td><span class="badge badge-ex">우수</span></td>
+            <td><span class="badge badge-low">낮음</span></td>
+          </tr>
+          <tr>
+            <td>중대역 (1 – 6 GHz)</td>
+            <td><span class="badge badge-mod">보통</span></td>
+            <td><span class="badge badge-mod">보통</span></td>
+            <td><span class="badge badge-mod">중간</span></td>
+          </tr>
+          <tr>
+            <td>고대역 (&gt;24 GHz, mmWave)</td>
+            <td><span class="badge badge-poor">낮음</span></td>
+            <td><span class="badge badge-poor">약함</span></td>
+            <td><span class="badge badge-hi">매우 높음</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Why Golden -->
+    <div class="section-header">
+      <div class="section-icon icon-gold">🌟</div>
+      <div>
+        <h2>Sub-1 GHz가 "황금 대역"인 이유</h2>
+        <p>IoT 플랫폼으로서 탁월한 위치를 만드는 네 가지 복합 강점</p>
+      </div>
+    </div>
+    <div class="why-grid" style="margin-bottom:48px;">
+      <div class="why-card">
+        <div class="why-check">✔</div>
+        <p><strong>장거리 + 우수한 투과성</strong> — 광대한 지역과 실내 환경을 동시에 커버</p>
+      </div>
+      <div class="why-card">
+        <div class="why-check">✔</div>
+        <p><strong>IoT에 최적화된 에너지 효율</strong> — 수십억 개의 센서 노드가 10년 이상 배터리로 구동 가능</p>
+      </div>
+      <div class="why-card">
+        <div class="why-check">✔</div>
+        <p><strong>성숙한 LPWAN 생태계</strong> — LoRa, Sigfox, NB-IoT 등 검증된 표준과 글로벌 구축 사례 보유</p>
+      </div>
+      <div class="why-card">
+        <div class="why-check">✔</div>
+        <p><strong>대규모 연결성</strong> — 단일 게이트웨이가 수천 개의 기기를 동시에 수용하는 구조</p>
+      </div>
+    </div>
+
+    <!-- 5G Bands comparison -->
+    <div class="section-header">
+      <div class="section-icon icon-gold">🚀</div>
+      <div>
+        <h2>5G 대역과의 비교</h2>
+        <p>이종 네트워크 구조에서 각 레이어의 역할</p>
+      </div>
+    </div>
+
+    <!-- 일러스트: 5G 레이어 피라미드 -->
+    <div class="illus-box">
+      <svg viewBox="0 0 820 230" width="820" height="230" xmlns="http://www.w3.org/2000/svg" font-family="'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif">
+        <!-- 피라미드 레이어 (아래부터 Sub-1GHz → Mid → mmWave) -->
+
+        <!-- Sub-1 GHz (최하단 - 가장 넓음) -->
+        <polygon points="120,200 700,200 640,138 180,138" fill="#f0a500" opacity="0.8"/>
+        <text x="410" y="178" text-anchor="middle" font-size="14" fill="#fff" font-weight="800">Sub-1 GHz — 커버리지 레이어</text>
+        <text x="410" y="196" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.85)">전국 단위 IoT / 제어 신호 / 낮은 데이터율</text>
+
+        <!-- Mid-band (중간) -->
+        <polygon points="180,135 640,135 580,73 240,73" fill="#2e7dcc" opacity="0.8"/>
+        <text x="410" y="110" text-anchor="middle" font-size="14" fill="#fff" font-weight="800">중대역 (1–6 GHz) — 용량 레이어</text>
+        <text x="410" y="128" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.85)">균형 잡힌 성능 / 스마트폰 / 도심 광대역</text>
+
+        <!-- mmWave (최상단 - 가장 좁음) -->
+        <polygon points="240,70 580,70 500,14 320,14" fill="#9b59b6" opacity="0.85"/>
+        <text x="410" y="48" text-anchor="middle" font-size="13" fill="#fff" font-weight="800">mmWave (&gt;24 GHz) — 핫스팟 레이어</text>
+
+        <!-- 오른쪽 설명 축 -->
+        <!-- 커버리지 축 -->
+        <line x1="730" y1="14" x2="730" y2="200" stroke="#dce4f0" stroke-width="1.5"/>
+        <text x="738" y="200" font-size="10" fill="#1a5a2e" font-weight="700">넓음</text>
+        <text x="738" y="14"  font-size="10" fill="#c0392b" font-weight="700">좁음</text>
+        <text x="760" y="115" font-size="11" fill="#1a2e5a" font-weight="700" transform="rotate(90,760,115)">커버리지</text>
+
+        <!-- 속도 축 -->
+        <line x1="70" y1="14" x2="70" y2="200" stroke="#dce4f0" stroke-width="1.5"/>
+        <text x="34" y="200" font-size="10" fill="#c0392b" font-weight="700">낮음</text>
+        <text x="34" y="14"  font-size="10" fill="#1a5a2e" font-weight="700">높음</text>
+        <text x="52" y="115" font-size="11" fill="#1a2e5a" font-weight="700" transform="rotate(-90,52,115)">데이터 속도</text>
+      </svg>
+    </div>
+
+    <div class="band-stack">
+      <div class="band-row">
+        <div class="band-indicator ind-sub"></div>
+        <div class="band-label">Sub-1 GHz<small>커버리지 레이어</small></div>
+        <div class="band-desc"><strong>전국 단위 커버리지.</strong> IoT 연결성, 제어 시그널링, 핵심 인프라 원격 측정의 백본 역할을 합니다. 고주파 대역이 도달하지 못하는 농촌·실내 지역까지 커버합니다.</div>
+      </div>
+      <div class="band-row">
+        <div class="band-indicator ind-mid"></div>
+        <div class="band-label">중대역 (1–6 GHz)<small>용량 레이어</small></div>
+        <div class="band-desc"><strong>균형 잡힌 성능.</strong> 적절한 커버리지와 높은 처리량을 결합하며, 스마트폰·광대역·도심 밀집 환경의 핵심 대역으로 활용됩니다.</div>
+      </div>
+      <div class="band-row">
+        <div class="band-indicator ind-mm"></div>
+        <div class="band-label">mmWave (&gt;24 GHz)<small>핫스팟 레이어</small></div>
+        <div class="band-desc"><strong>초고속 처리량.</strong> 경기장·행사장·고정 무선 접속(FWA)에서 수 Gbps의 속도를 제공하지만, 커버리지가 매우 제한적이고 장애물 투과 성능이 낮습니다.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════ 핵심 인사이트 ══════════ -->
+  <section class="section">
+    <div class="insight-box">
+      <div class="icon">💡</div>
+      <blockquote>"보편적으로 최선인 주파수는 없다 — '황금 대역'은 애플리케이션 요구사항에 따라 달라진다."</blockquote>
+      <p>올바른 주파수 선택은 물리 특성을 목적에 맞추는 과정입니다. 커버리지 범위, 투과 요구사항, 데이터 용량, 전력 예산을 종합적으로 검토해야 합니다.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════ 핵심 요약 ══════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-icon icon-gold">📌</div>
+      <div>
+        <h2>핵심 요약</h2>
+        <p>무선 시스템에서 Sub-1 GHz의 전략적 역할</p>
+      </div>
+    </div>
+    <div class="takeaway-grid">
+      <div class="takeaway-card blue">
+        <h4>📡 Sub-1 GHz = 커버리지 중심 최적 대역</h4>
+        <ul class="takeaway-list">
+          <li>300 MHz ~ 1 GHz 스펙트럼</li>
+          <li>탁월한 통신 거리 및 투과 성능</li>
+          <li>분산된 광역 배포 환경에 최적</li>
+          <li>낮은 데이터 전송률이 주요 트레이드오프</li>
+        </ul>
+      </div>
+      <div class="takeaway-card gold">
+        <h4>⭐ 핵심 활용 분야</h4>
+        <ul class="takeaway-list">
+          <li>AIoT 및 스마트 센서 네트워크</li>
+          <li>스마트 시티 인프라</li>
+          <li>산업용 무선 시스템</li>
+          <li>농촌·지하 환경 연결성</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <strong>Sub-1 GHz &amp; 황금 주파수 대역</strong> · RF / 무선 통신 기술 레퍼런스
+</footer>
+
+</body>
+</html>
