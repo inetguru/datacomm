@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>대한민국 이동통신 주파수 경매 결과</title>
+<style>
+:root{
+  --bg:#f5f7fa;--surface:#fff;--surface2:#f1f3f9;--border:#dde1ed;
+  --tp:#1a1d2e;--ts:#5a6080;--tm:#9aa0bf;
+  --skt:#c92a2a;--skt-l:#fff0f0;--skt-b:#ffa8a8;
+  --kt:#1971c2;--kt-l:#e7f5ff;--kt-b:#74c0fc;
+  --lgu:#6741d9;--lgu-l:#f3f0ff;--lgu-b:#b197fc;
+  --blue:#228be6;--green:#2f9e44;--orange:#e8590c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:14px;line-height:1.6}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,#1a1d2e 0%,#2d3561 100%);color:#fff;padding:48px 24px 36px;text-align:center}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);font-size:11px;font-weight:700;letter-spacing:.1em;padding:4px 14px;border-radius:20px;margin-bottom:14px}
+.hero h1{font-size:clamp(20px,4vw,34px);font-weight:800}
+.hero p{margin-top:8px;font-size:13px;color:rgba(255,255,255,.7)}
+
+/* ── Legend ── */
+.legend{background:var(--surface);border-bottom:1px solid var(--border);display:flex;justify-content:center;gap:24px;flex-wrap:wrap;padding:12px 24px}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+
+/* ── Tabs ── */
+.tab-nav{background:var(--surface);border-bottom:2px solid var(--border);display:flex;overflow-x:auto;position:sticky;top:0;z-index:100;-webkit-overflow-scrolling:touch}
+.tab-btn{padding:13px 18px;font-size:13px;font-weight:600;color:var(--ts);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;white-space:nowrap;transition:color .2s,border-color .2s}
+.tab-btn:hover{color:var(--blue)}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.container{max-width:1100px;margin:0 auto;padding:28px 18px 80px}
+
+/* ── Section header ── */
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid var(--border)}
+.year-tag{background:#1a1d2e;color:#fff;font-size:13px;font-weight:800;padding:6px 16px;border-radius:24px;white-space:nowrap}
+.year-tag.y13{background:linear-gradient(135deg,#2f9e44,#087f5b)}
+.year-tag.y16{background:linear-gradient(135deg,#e8590c,#c92a2a)}
+.year-tag.y18{background:linear-gradient(135deg,#6741d9,#9c36b5)}
+.year-tag.yevo{background:linear-gradient(135deg,#1864ab,#1971c2)}
+.sec-title{font-size:18px;font-weight:800}
+.sec-sub{font-size:12px;color:var(--ts);margin-top:2px}
+
+/* ── Meta chips ── */
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.meta-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;font-size:12px;color:var(--ts)}
+.meta-chip strong{color:var(--tp)}
+
+/* ── Spectrum Chart ── */
+.spec-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.spec-title{background:var(--surface2);padding:8px 16px;font-size:12px;font-weight:700;color:var(--ts);border-bottom:1px solid var(--border);letter-spacing:.04em;text-transform:uppercase}
+.spec-row{display:flex;align-items:stretch;border-bottom:1px solid var(--border)}
+.spec-row:last-child{border-bottom:none}
+.spec-info{width:110px;flex-shrink:0;padding:10px 12px;background:var(--surface2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
+.spec-freq{font-weight:800;font-size:13px;color:var(--tp)}
+.spec-dir{font-size:10px;font-weight:700;color:var(--blue);margin-top:1px}
+.spec-mhz{font-size:10px;color:var(--tm);margin-top:2px}
+.spec-body{flex:1;padding:6px 12px 8px}
+.spec-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--tm);margin-bottom:3px}
+.spec-scale span{position:relative}
+.spec-track{display:flex;height:42px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+
+/* blocks */
+.blk{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border-right:1px solid rgba(0,0,0,.08);transition:filter .15s}
+.blk:last-child{border-right:none}
+.blk span{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px}
+.blk-empty{background:#f1f3f5;border-right-color:var(--border)!important}
+.blk-fail{background:#fff5f5;border-right-color:#ffc9c9!important}
+.blk-fail span{color:#e03131;font-size:9px}
+.blk-cand{background:#fcc2d7;border-right-color:#f783ac!important}
+.blk-cand span{color:#a61e4d}
+.blk-skt{background:var(--skt-l);border-right-color:var(--skt-b)!important}
+.blk-skt span{color:var(--skt)}
+.blk-kt{background:var(--kt-l);border-right-color:var(--kt-b)!important}
+.blk-kt span{color:var(--kt)}
+.blk-lgu{background:var(--lgu-l);border-right-color:var(--lgu-b)!important}
+.blk-lgu span{color:var(--lgu)}
+.blk-new-skt{background:#ffe3e3;border:none;border-right:2px solid var(--skt)!important}
+.blk-new-skt span{color:var(--skt);font-weight:800}
+.blk-new-kt{background:#dbe4ff;border-right:2px solid var(--kt)!important}
+.blk-new-kt span{color:var(--kt);font-weight:800}
+.blk-new-lgu{background:#e5dbff;border-right:2px solid var(--lgu)!important}
+.blk-new-lgu span{color:var(--lgu);font-weight:800}
+
+.spec-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.spec-leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ts)}
+.spec-leg-box{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.12)}
+
+/* ── Result table ── */
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);margin-bottom:22px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--surface2);color:var(--ts);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:11px 14px;text-align:left;border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(34,139,230,.04)}
+td{padding:13px 14px;vertical-align:middle}
+.op-badge{display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:12px;padding:3px 10px;border-radius:8px}
+.op-skt{background:var(--skt-l);color:var(--skt);border:1px solid var(--skt-b)}
+.op-kt{background:var(--kt-l);color:var(--kt);border:1px solid var(--kt-b)}
+.op-lgu{background:var(--lgu-l);color:var(--lgu);border:1px solid var(--lgu-b)}
+.price-big{font-weight:800;font-size:15px;color:var(--tp)}
+.price-note{font-size:11px;color:var(--tm);margin-top:2px}
+.price-hot{color:var(--orange)}
+.price-min{color:var(--green)}
+.total-row{background:rgba(34,139,230,.05)!important}
+.total-row td{font-weight:700;border-top:1px solid rgba(34,139,230,.2);color:var(--blue);font-size:15px}
+.freq-cell{font-weight:700;color:var(--blue)}
+.fail-row td{color:#e03131}
+
+/* ── Feature cards ── */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:28px}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:14px 16px;display:flex;gap:11px;align-items:flex-start}
+.feat-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.feat-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.feat-body{font-size:12px;color:var(--ts);line-height:1.55}
+
+/* ── Summary stats (overview) ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;transition:box-shadow .2s}
+.stat-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.stat-yr{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--tm);text-transform:uppercase;margin-bottom:3px}
+.stat-amt{font-size:24px;font-weight:900;color:var(--tp);letter-spacing:-.02em}
+.stat-amt span{font-size:13px;font-weight:600;color:var(--ts)}
+.stat-lbl{font-size:11px;color:var(--ts);margin-top:3px}
+.stat-badge{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px}
+.b-lte{background:#e7f5ff;color:var(--kt)}
+.b-lte2{background:#ebfbee;color:var(--green)}
+.b-ltea{background:#fff4e6;color:var(--orange)}
+.b-5g{background:var(--lgu-l);color:var(--lgu)}
+
+/* ── Overview comparison bar chart ── */
+.compare-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:22px}
+.compare-title{font-weight:700;margin-bottom:16px;font-size:14px}
+.compare-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.compare-row:last-child{margin-bottom:0}
+.compare-label{width:80px;font-size:13px;font-weight:700;flex-shrink:0}
+.compare-bar-wrap{flex:1;background:#f1f3f5;border-radius:6px;height:32px;overflow:hidden}
+.compare-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:12px;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;transition:width .5s}
+.compare-val{font-size:12px;font-weight:700;color:var(--ts);white-space:nowrap;width:110px;text-align:right;flex-shrink:0}
+
+/* ── SKT Evolution ── */
+.evo-matrix{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px}
+.evo-matrix table{width:100%;border-collapse:collapse}
+.evo-matrix thead th{background:#1a1d2e;color:#fff;font-size:12px;font-weight:700;padding:10px 14px;text-align:center}
+.evo-matrix thead th:first-child{text-align:left;width:100px}
+.evo-matrix tbody tr{border-bottom:1px solid var(--border)}
+.evo-matrix tbody tr:last-child{border-bottom:none}
+.evo-matrix td{padding:10px 14px;text-align:center;font-size:12px}
+.evo-matrix td:first-child{text-align:left;font-weight:700;font-size:13px}
+.evo-cell-on{background:#e7f5ff;color:var(--kt);font-weight:700;border-radius:6px;font-size:11px}
+.evo-cell-new{background:#ffe3e3;color:var(--skt);font-weight:800;border-radius:6px;font-size:11px}
+.evo-cell-off{color:var(--tm);font-size:11px}
+
+.gen-timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:24px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.gen-block{padding:18px 14px;background:var(--surface);border-right:1px solid var(--border);text-align:center}
+.gen-block:last-child{border-right:none}
+.gen-label{font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.gen-year{font-size:13px;font-weight:800;color:var(--tp);margin-bottom:8px}
+.gen-bands{display:flex;flex-direction:column;gap:4px}
+.gen-band{font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600}
+.gb-800{background:#fff3bf;color:#e67700}
+.gb-18{background:#d3f9d8;color:#1a7431}
+.gb-21{background:var(--kt-l);color:var(--kt)}
+.gb-26{background:var(--lgu-l);color:var(--lgu)}
+.gb-35{background:#ffe3e3;color:var(--skt)}
+.gb-28{background:#f8f0ff;color:#862e9c}
+
+.layer-chart{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px}
+.layer-title{font-weight:700;font-size:14px;margin-bottom:16px}
+.layer-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.layer-row:last-child{margin-bottom:0}
+.layer-freq{width:80px;font-size:12px;font-weight:700;color:var(--tp);flex-shrink:0}
+.layer-role{width:90px;font-size:11px;color:var(--ts);flex-shrink:0}
+.layer-bars{flex:1;display:flex;gap:4px;align-items:center}
+.layer-bar{height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;white-space:nowrap}
+
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .gen-timeline{grid-template-columns:1fr 1fr}
+  .spec-info{width:80px}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">KOREA SPECTRUM AUCTION HISTORY</div>
+  <h1>대한민국 이동통신 주파수 경매 결과</h1>
+  <p>2011 · 2013 · 2016 · 2018년 주파수 경매 낙찰 현황 및 SKT 주파수 변천사</p>
+</div>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:var(--skt)"></div>SK텔레콤 (SKT)</div>
+  <div class="leg-item"><div class="leg-dot" style="background:var(--kt)"></div>KT</div>
+  <div class="leg-item"><div class="leg-dot" style="background:var(--lgu)"></div>LG유플러스 (LGU+)</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#f783ac"></div>경매 대상 블록</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#e03131"></div>유찰</div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('overview')">📊 개요</button>
+  <button class="tab-btn" onclick="showTab('y2011')">2011년 1차</button>
+  <button class="tab-btn" onclick="showTab('y2013')">2013년 2차</button>
+  <button class="tab-btn" onclick="showTab('y2016')">2016년 3차</button>
+  <button class="tab-btn" onclick="showTab('y2018')">2018년 4차 (5G)</button>
+  <button class="tab-btn" onclick="showTab('skt')">📡 SKT 변천사</button>
+</div>
+
+<!-- ═══════════════════════════ OVERVIEW ═══════════════════════════ -->
+<div id="tab-overview" class="tab-panel active">
+<div class="container">
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-yr">1차 · 2011</div>
+    <div class="stat-amt">1조 7,015<span>억원</span></div>
+    <div class="stat-lbl">총 낙찰금 · 50 MHz</div>
+    <div class="stat-badge b-lte">4G LTE 도입</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-yr">2차 · 2013</div>
+    <div class="stat-amt">2조 4,289<span>억원</span></div>
+    <div class="stat-lbl">총 낙찰금 · 110 MHz</div>
+    <div class="stat-badge b-lte2">LTE 광대역화</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-yr">3차 · 2016</div>
+    <div class="stat-amt">2조 1,106<span>억원</span></div>
+    <div class="stat-lbl">총 낙찰금 · 100 MHz (700MHz 유찰)</div>
+    <div class="stat-badge b-ltea">LTE-A 고도화</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-yr">4차 · 2018</div>
+    <div class="stat-amt">3조 6,183<span>억원</span></div>
+    <div class="stat-lbl">총 낙찰금 · 2,680 MHz</div>
+    <div class="stat-badge b-5g">5G 상용화</div>
+  </div>
+</div>
+
+<div class="compare-wrap">
+  <div class="compare-title">경매별 총 낙찰금액 비교</div>
+  <div class="compare-row">
+    <div class="compare-label">2011년</div>
+    <div class="compare-bar-wrap"><div class="compare-bar" style="width:47%;background:#228be6">1조 7,015억</div></div>
+    <div class="compare-val">1조 7,015억원</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-label">2013년</div>
+    <div class="compare-bar-wrap"><div class="compare-bar" style="width:67%;background:#2f9e44">2조 4,289억</div></div>
+    <div class="compare-val">2조 4,289억원</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-label">2016년</div>
+    <div class="compare-bar-wrap"><div class="compare-bar" style="width:58%;background:#e8590c">2조 1,106억</div></div>
+    <div class="compare-val">2조 1,106억원</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-label">2018년</div>
+    <div class="compare-bar-wrap"><div class="compare-bar" style="width:100%;background:#6741d9">3조 6,183억</div></div>
+    <div class="compare-val">3조 6,183억원</div>
+  </div>
+</div>
+
+<div class="feat-grid">
+  <div class="feat-card"><div class="feat-icon">🇰🇷</div><div>
+    <div class="feat-title">2011 — 한국 최초 주파수 경매</div>
+    <div class="feat-body">행정 배분에서 시장 기반 경매제로 전환. SKT-KT 82라운드 과열 경쟁, '승자의 저주' 논란.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🗺️</div><div>
+    <div class="feat-title">2013 — 밴드플랜 혼합 경매 도입</div>
+    <div class="feat-body">동시오름입찰 + 밀봉입찰 혼합 방식 채택. LGU+ 2회 연속 단독 입찰로 최저가 낙찰.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">❌</div><div>
+    <div class="feat-title">2016 — 700 MHz 황금 주파수 유찰</div>
+    <div class="feat-body">5개 블록 140 MHz 역대 최대 규모 경매. 황금 주파수 700 MHz는 3사 모두 외면해 유찰.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🌍</div><div>
+    <div class="feat-title">2018 — 세계 최초 5G 중·고대역 동시 경매</div>
+    <div class="feat-body">3.5 GHz + 28 GHz 동시 할당. 역대 최고 낙찰가 3조 6,183억원. LGU+ 80 MHz 불균등.</div>
+  </div></div>
+</div>
+
+</div></div>
+
+<!-- ═══════════════════════════ 2011 ═══════════════════════════ -->
+<div id="tab-y2011" class="tab-panel">
+<div class="container">
+
+<div class="sec-head">
+  <div class="year-tag">2011년</div>
+  <div>
+    <div class="sec-title">제1차 이동통신 주파수 경매</div>
+    <div class="sec-sub">대한민국 최초 주파수 경매 · 2011년 8월 시행</div>
+  </div>
+</div>
+
+<div class="meta-row">
+  <div class="meta-chip">📅 <strong>시행</strong> 2011년 8월</div>
+  <div class="meta-chip">🔨 <strong>방식</strong> 동시오름입찰 (SMRA)</div>
+  <div class="meta-chip">📈 <strong>입찰증분</strong> 1%</div>
+  <div class="meta-chip">🔄 <strong>라운드</strong> 최대 82라운드</div>
+  <div class="meta-chip">📡 <strong>공급</strong> 50 MHz (25+25 FDD)</div>
+</div>
+
+<!-- Spectrum: 경매 대상 -->
+<div class="spec-wrap">
+  <div class="spec-title">📡 경매 대상 주파수 블록</div>
+
+  <!-- 800 MHz -->
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">800 MHz</div>
+      <div class="spec-dir">FDD UL/DL</div>
+      <div class="spec-mhz">824–894 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>824</span><span>849</span></div>
+      <div class="spec-track">
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+        <div class="blk blk-cand" style="flex:10"><span>A블록 10MHz</span></div>
+        <div class="blk blk-empty" style="flex:5"><span></span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>경매 대상 (10 MHz×2)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.8 GHz -->
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">1.8 GHz</div>
+      <div class="spec-dir">FDD UL</div>
+      <div class="spec-mhz">1710–1785 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1710</span><span>1745</span><span>1765</span><span>1785</span></div>
+      <div class="spec-track">
+        <div class="blk blk-kt" style="flex:15"><span>KT 기존</span></div>
+        <div class="blk blk-lgu" style="flex:5"><span>LGU+</span></div>
+        <div class="blk blk-cand" style="flex:20"><span>B블록 20MHz</span></div>
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>경매 대상 (20 MHz×2)</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--kt-l)"></div>KT 기존 보유</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--lgu-l)"></div>LGU+ 기존 보유</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.1 GHz -->
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.1 GHz</div>
+      <div class="spec-dir">FDD UL</div>
+      <div class="spec-mhz">1920–1980 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1920</span><span>1940</span><span>1960</span><span>1980</span></div>
+      <div class="spec-track">
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+        <div class="blk blk-cand" style="flex:20"><span>C블록 20MHz</span></div>
+        <div class="blk blk-empty" style="flex:10"><span>SKT 기존 3G</span></div>
+        <div class="blk blk-empty" style="flex:20"><span>기타</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>경매 대상 (20 MHz×2)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Spectrum: 낙찰 결과 -->
+<div class="spec-wrap">
+  <div class="spec-title">🏆 낙찰 결과</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">800 MHz</div>
+      <div class="spec-dir">낙찰</div>
+      <div class="spec-mhz">10 MHz×2 (FDD)</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>824</span><span>849</span></div>
+      <div class="spec-track">
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+        <div class="blk blk-new-kt" style="flex:10"><span>KT 낙찰</span></div>
+        <div class="blk blk-empty" style="flex:5"><span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">1.8 GHz</div>
+      <div class="spec-dir">낙찰</div>
+      <div class="spec-mhz">20 MHz×2 (FDD)</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1710</span><span>1745</span><span>1765</span><span>1785</span></div>
+      <div class="spec-track">
+        <div class="blk blk-kt" style="flex:15"><span>KT 기존</span></div>
+        <div class="blk blk-lgu" style="flex:5"><span>LGU+</span></div>
+        <div class="blk blk-new-skt" style="flex:20"><span>SKT 낙찰 ▼</span></div>
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.1 GHz</div>
+      <div class="spec-dir">낙찰</div>
+      <div class="spec-mhz">20 MHz×2 (FDD)</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1920</span><span>1940</span><span>1960</span><span>1980</span></div>
+      <div class="spec-track">
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+        <div class="blk blk-new-lgu" style="flex:20"><span>LGU+ 낙찰 ▼</span></div>
+        <div class="blk blk-empty" style="flex:30"><span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tbl-wrap">
+  <table>
+    <thead><tr><th>낙찰자</th><th>주파수 대역</th><th>대역폭</th><th>낙찰 가격</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="op-badge op-skt">● SKT</span></td>
+        <td class="freq-cell">1.8 GHz</td>
+        <td>20 MHz × 2</td>
+        <td><div class="price-big">9,950억원</div><div class="price-note price-hot">🔥 82라운드 과열, 최저가 2.4배</div></td>
+        <td>KT와 치열한 경쟁 끝 낙찰</td>
+      </tr>
+      <tr>
+        <td><span class="op-badge op-kt">● KT</span></td>
+        <td class="freq-cell">800 MHz</td>
+        <td>10 MHz × 2</td>
+        <td><div class="price-big">2,610억원</div><div class="price-note price-min">✓ 최저경쟁가격</div></td>
+        <td>1.8GHz 경쟁 패배 후 800MHz 확보</td>
+      </tr>
+      <tr>
+        <td><span class="op-badge op-lgu">● LGU+</span></td>
+        <td class="freq-cell">2.1 GHz</td>
+        <td>20 MHz × 2</td>
+        <td><div class="price-big">4,455억원</div><div class="price-note price-min">✓ 최저경쟁가격 (단독 입찰)</div></td>
+        <td>경쟁 없이 단독 낙찰</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="3">합계</td>
+        <td>1조 7,015억원</td><td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="feat-grid">
+  <div class="feat-card"><div class="feat-icon">🇰🇷</div><div>
+    <div class="feat-title">한국 최초 주파수 경매</div>
+    <div class="feat-body">기존 행정 배분에서 시장 경매제로 전환한 역사적 첫 경매입니다.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🔥</div><div>
+    <div class="feat-title">SKT '승자의 저주'</div>
+    <div class="feat-body">1.8GHz를 두고 SKT-KT가 82라운드 경쟁해 SKT가 최저가 2.4배에 낙찰. 과도한 경쟁 비용 논란.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">⚖️</div><div>
+    <div class="feat-title">LGU+ 단독 입찰 혜택</div>
+    <div class="feat-body">2.1GHz를 경쟁자 없이 최저가로 확보. 3사 간 투자 부담 불균형 시작.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">📶</div><div>
+    <div class="feat-title">4G LTE 상용화 기반</div>
+    <div class="feat-body">이 경매 주파수로 2011~2012년 국내 LTE 본격 상용화가 가능해졌습니다.</div>
+  </div></div>
+</div>
+
+</div></div>
+
+<!-- ═══════════════════════════ 2013 ═══════════════════════════ -->
+<div id="tab-y2013" class="tab-panel">
+<div class="container">
+
+<div class="sec-head">
+  <div class="year-tag y13">2013년</div>
+  <div>
+    <div class="sec-title">제2차 이동통신 주파수 경매</div>
+    <div class="sec-sub">LTE 광대역화 · 밴드플랜 경매 도입 · 2013년 시행</div>
+  </div>
+</div>
+
+<div class="meta-row">
+  <div class="meta-chip">📅 <strong>시행</strong> 2013년</div>
+  <div class="meta-chip">🔨 <strong>방식</strong> 동시오름입찰 + 밀봉입찰 혼합</div>
+  <div class="meta-chip">📈 <strong>입찰증분</strong> 0.75%</div>
+  <div class="meta-chip">🗺️ <strong>특징</strong> 밴드플랜 경매 최초 도입</div>
+  <div class="meta-chip">📡 <strong>공급</strong> 110 MHz</div>
+</div>
+
+<!-- 1.8GHz — image-based layout -->
+<div class="spec-wrap">
+  <div class="spec-title">📡 1.8 GHz 대역 — 경매 대상 블록 (이미지 기준)</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">1.8 GHz</div>
+      <div class="spec-dir">UL</div>
+      <div class="spec-mhz">1710–1785 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale">
+        <span>1710</span><span>1715</span><span>1735</span><span>1745</span><span>1755</span><span>1765</span><span>1785</span>
+      </div>
+      <div class="spec-track">
+        <div class="blk blk-empty" style="flex:5"><span></span></div>
+        <div class="blk blk-cand" style="flex:20"><span>C (20)</span></div>
+        <div class="blk blk-cand" style="flex:10"><span>D (10)</span></div>
+        <div class="blk blk-kt" style="flex:10"><span>KT</span></div>
+        <div class="blk blk-skt" style="flex:10"><span>SKT</span></div>
+        <div class="blk blk-lgu" style="flex:15"><span>LGU+</span></div>
+        <div class="blk blk-empty" style="flex:5"><span></span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>경매 대상 (C·D블록)</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--kt-l)"></div>KT 기존 보유</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--skt-l)"></div>SKT 기존 보유</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--lgu-l)"></div>LGU+ 기존 보유</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">1.8 GHz</div>
+      <div class="spec-dir">DL</div>
+      <div class="spec-mhz">1805–1880 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale">
+        <span>1805</span><span>1810</span><span>1830</span><span>1840</span><span>1850</span><span>1860</span><span>1880</span>
+      </div>
+      <div class="spec-track">
+        <div class="blk blk-empty" style="flex:5"><span></span></div>
+        <div class="blk blk-cand" style="flex:20"><span>C (20)</span></div>
+        <div class="blk blk-cand" style="flex:10"><span>D (10)</span></div>
+        <div class="blk blk-kt" style="flex:10"><span>KT</span></div>
+        <div class="blk blk-skt" style="flex:10"><span>SKT</span></div>
+        <div class="blk blk-lgu" style="flex:10"><span>LGU+</span></div>
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2.6GHz -->
+<div class="spec-wrap">
+  <div class="spec-title">📡 2.6 GHz 대역 — 경매 대상 블록 (이미지 기준)</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.6 GHz</div>
+      <div class="spec-dir">UL</div>
+      <div class="spec-mhz">2500–2540 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>2500</span><span>2520</span><span>2540</span></div>
+      <div class="spec-track">
+        <div class="blk blk-cand" style="flex:20"><span>A (20 MHz)</span></div>
+        <div class="blk blk-cand" style="flex:20"><span>B (20 MHz)</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>경매 대상 A+B 블록 (총 40 MHz×2)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.6 GHz</div>
+      <div class="spec-dir">DL</div>
+      <div class="spec-mhz">2620–2660 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>2620</span><span>2640</span><span>2660</span></div>
+      <div class="spec-track">
+        <div class="blk blk-cand" style="flex:20"><span>A (20 MHz)</span></div>
+        <div class="blk blk-cand" style="flex:20"><span>B (20 MHz)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 낙찰 결과 -->
+<div class="spec-wrap">
+  <div class="spec-title">🏆 낙찰 결과</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">1.8 GHz</div>
+      <div class="spec-dir">낙찰</div>
+      <div class="spec-mhz">35 MHz×2 × 2블록</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1710</span><span>1745</span><span>1785</span></div>
+      <div class="spec-track">
+        <div class="blk blk-new-kt" style="flex:35"><span>KT 낙찰 35 MHz</span></div>
+        <div class="blk blk-new-skt" style="flex:35"><span>SKT 낙찰 35 MHz</span></div>
+        <div class="blk blk-lgu" style="flex:5"><span>LGU+</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--kt-l);border-left:3px solid var(--kt)"></div>KT — 9,001억원</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--skt-l);border-left:3px solid var(--skt)"></div>SKT — 1조 500억원</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.6 GHz</div>
+      <div class="spec-dir">낙찰</div>
+      <div class="spec-mhz">40 MHz×2</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>2500</span><span>2540</span></div>
+      <div class="spec-track">
+        <div class="blk blk-new-lgu" style="flex:40"><span>LGU+ 낙찰 40 MHz (단독)</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--lgu-l);border-left:3px solid var(--lgu)"></div>LGU+ — 4,788억원 (최저경쟁가, 단독입찰)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tbl-wrap">
+  <table>
+    <thead><tr><th>낙찰자</th><th>주파수 대역</th><th>대역폭</th><th>낙찰 가격</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="op-badge op-skt">● SKT</span></td>
+        <td class="freq-cell">1.8 GHz</td>
+        <td>35 MHz × 2</td>
+        <td><div class="price-big">1조 500억원</div><div class="price-note price-hot">🔥 2013년 최고가</div></td>
+        <td>밴드플랜에 따라 대역 위치 결정</td>
+      </tr>
+      <tr>
+        <td><span class="op-badge op-kt">● KT</span></td>
+        <td class="freq-cell">1.8 GHz</td>
+        <td>35 MHz × 2</td>
+        <td><div class="price-big">9,001억원</div><div class="price-note price-hot">⚡ 최저가 3배 이상</div></td>
+        <td>인접대역 확보로 광대역 LTE 구성</td>
+      </tr>
+      <tr>
+        <td><span class="op-badge op-lgu">● LGU+</span></td>
+        <td class="freq-cell">2.6 GHz</td>
+        <td>40 MHz × 2</td>
+        <td><div class="price-big">4,788억원</div><div class="price-note price-min">✓ 최저경쟁가 (단독 입찰)</div></td>
+        <td>2회 연속 단독 입찰 최저가 확보</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="3">합계</td>
+        <td>2조 4,289억원</td><td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="feat-grid">
+  <div class="feat-card"><div class="feat-icon">🗺️</div><div>
+    <div class="feat-title">밴드플랜 경매 최초 도입</div>
+    <div class="feat-body">KT 인접대역 공정경쟁 문제로 낙찰자에 따라 대역 위치가 달라지는 밴드플랜 방식을 처음 적용.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🔒</div><div>
+    <div class="feat-title">밀봉입찰 혼합으로 과열 방지</div>
+    <div class="feat-body">최대 50라운드 오름입찰 후 미결 시 밀봉입찰로 결정. 그러나 총액은 최저가 대비 약 2배에 달했습니다.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">📊</div><div>
+    <div class="feat-title">총 낙찰가 2조 4,289억원</div>
+    <div class="feat-body">최저경쟁가 합계 1조 4,414억원 대비 최종 낙찰가는 약 1.69배로 경쟁이 치열했습니다.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🏆</div><div>
+    <div class="feat-title">LGU+ 2회 연속 최저가 낙찰</div>
+    <div class="feat-body">2011년에 이어 또다시 단독 입찰로 최저가 확보. 3사 투자 불균형이 심화되었습니다.</div>
+  </div></div>
+</div>
+
+</div></div>
+
+<!-- ═══════════════════════════ 2016 ═══════════════════════════ -->
+<div id="tab-y2016" class="tab-panel">
+<div class="container">
+
+<div class="sec-head">
+  <div class="year-tag y16">2016년</div>
+  <div>
+    <div class="sec-title">제3차 이동통신 주파수 경매</div>
+    <div class="sec-sub">LTE-A 고도화 · 5개 블록 동시 경매 · 2016년 4월 시행</div>
+  </div>
+</div>
+
+<div class="meta-row">
+  <div class="meta-chip">📅 <strong>시행</strong> 2016년 4월</div>
+  <div class="meta-chip">🔨 <strong>방식</strong> 동시오름입찰 (SMRA)</div>
+  <div class="meta-chip">📡 <strong>공급</strong> 5블록 · 140 MHz</div>
+  <div class="meta-chip">⚠️ <strong>특이사항</strong> 700 MHz 유찰</div>
+</div>
+
+<!-- 경매 대상 -->
+<div class="spec-wrap">
+  <div class="spec-title">📡 경매 대상 주파수 블록 (5개 블록)</div>
+
+  <!-- 700MHz -->
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">700 MHz</div>
+      <div class="spec-dir">A블록 · FDD</div>
+      <div class="spec-mhz">703–748/758–803</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>703</span><span>748 MHz (UL)</span></div>
+      <div class="spec-track">
+        <div class="blk blk-cand" style="flex:45"><span>A블록 40 MHz×2</span></div>
+        <div class="blk blk-empty" style="flex:10"><span></span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>A블록 — 공급 최저가 2,808억원</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.8GHz -->
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">1.8 GHz</div>
+      <div class="spec-dir">B블록 · FDD</div>
+      <div class="spec-mhz">1745–1765/1840–1860</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1710</span><span>1745</span><span>1765</span><span>1785</span></div>
+      <div class="spec-track">
+        <div class="blk blk-kt" style="flex:15"><span>KT 기존</span></div>
+        <div class="blk blk-cand" style="flex:20"><span>B블록 20MHz</span></div>
+        <div class="blk blk-skt" style="flex:10"><span>SKT</span></div>
+        <div class="blk blk-lgu" style="flex:10"><span>LGU+</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>B블록 20 MHz×2 — 공급 최저가 4,513억원</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.1GHz -->
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.1 GHz</div>
+      <div class="spec-dir">C블록 · FDD</div>
+      <div class="spec-mhz">1920–1940/2110–2130</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1920</span><span>1940</span><span>1960</span><span>1980</span></div>
+      <div class="spec-track">
+        <div class="blk blk-cand" style="flex:20"><span>C블록 20MHz</span></div>
+        <div class="blk blk-empty" style="flex:20"><span>기존 3G</span></div>
+        <div class="blk blk-empty" style="flex:20"><span></span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>C블록 20 MHz×2 — 공급 최저가 3,816억원</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.6GHz D+E -->
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.6 GHz</div>
+      <div class="spec-dir">D·E블록 · TDD</div>
+      <div class="spec-mhz">2535–2655 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>2535</span><span>2575</span><span>2615</span><span>2655</span></div>
+      <div class="spec-track">
+        <div class="blk blk-cand" style="flex:40"><span>D블록 40 MHz</span></div>
+        <div class="blk blk-cand" style="flex:20"><span>E블록 20 MHz</span></div>
+        <div class="blk blk-empty" style="flex:20"><span></span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>D블록 40MHz (최저가 3,705억) · E블록 20MHz (최저가 3,277억)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 낙찰 결과 -->
+<div class="spec-wrap">
+  <div class="spec-title">🏆 낙찰 결과</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">700 MHz</div>
+      <div class="spec-dir" style="color:#e03131">유찰</div>
+      <div class="spec-mhz">A블록</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>703</span><span>748 MHz</span></div>
+      <div class="spec-track">
+        <div class="blk blk-fail" style="flex:1"><span>⚠ 유찰 — 3사 모두 외면</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">1.8 GHz</div>
+      <div class="spec-dir">B블록 낙찰</div>
+      <div class="spec-mhz">KT</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1710</span><span>1745</span><span>1765</span><span>1785</span></div>
+      <div class="spec-track">
+        <div class="blk blk-kt" style="flex:15"><span>KT 기존</span></div>
+        <div class="blk blk-new-kt" style="flex:20"><span>KT 신규 ▼</span></div>
+        <div class="blk blk-skt" style="flex:10"><span>SKT</span></div>
+        <div class="blk blk-lgu" style="flex:10"><span>LGU+</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.1 GHz</div>
+      <div class="spec-dir">C블록 낙찰</div>
+      <div class="spec-mhz">LGU+</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>1920</span><span>1940</span><span>1960</span><span>1980</span></div>
+      <div class="spec-track">
+        <div class="blk blk-new-lgu" style="flex:20"><span>LGU+ 신규 ▼</span></div>
+        <div class="blk blk-empty" style="flex:40"><span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">2.6 GHz</div>
+      <div class="spec-dir">D·E 낙찰</div>
+      <div class="spec-mhz">SKT</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>2535</span><span>2575</span><span>2615</span><span>2655</span></div>
+      <div class="spec-track">
+        <div class="blk blk-new-skt" style="flex:40"><span>SKT D블록 40MHz ▼</span></div>
+        <div class="blk blk-new-skt" style="flex:20"><span>SKT E블록 ▼</span></div>
+        <div class="blk blk-empty" style="flex:20"><span></span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--skt-l);border-left:3px solid var(--skt)"></div>SKT D블록 9,500억 + E블록 3,277억</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tbl-wrap">
+  <table>
+    <thead><tr><th>낙찰자</th><th>블록</th><th>주파수 대역</th><th>대역폭</th><th>낙찰 가격</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="op-badge op-skt">● SKT</span></td>
+        <td>D블록</td>
+        <td class="freq-cell">2.6 GHz</td>
+        <td>40 MHz</td>
+        <td><div class="price-big">9,500억원</div><div class="price-note price-hot">🔥 경쟁으로 가격 상승</div></td>
+      </tr>
+      <tr>
+        <td><span class="op-badge op-skt">● SKT</span></td>
+        <td>E블록</td>
+        <td class="freq-cell">2.6 GHz</td>
+        <td>20 MHz</td>
+        <td><div class="price-big">3,277억원</div><div class="price-note price-min">✓ 최저경쟁가격</div></td>
+      </tr>
+      <tr>
+        <td><span class="op-badge op-kt">● KT</span></td>
+        <td>B블록</td>
+        <td class="freq-cell">1.8 GHz</td>
+        <td>20 MHz × 2</td>
+        <td><div class="price-big">4,513억원</div><div class="price-note price-min">✓ 최저경쟁가격</div></td>
+      </tr>
+      <tr>
+        <td><span class="op-badge op-lgu">● LGU+</span></td>
+        <td>C블록</td>
+        <td class="freq-cell">2.1 GHz</td>
+        <td>20 MHz × 2</td>
+        <td><div class="price-big">3,816억원</div><div class="price-note price-min">✓ 최저경쟁가격</div></td>
+      </tr>
+      <tr class="fail-row">
+        <td>유찰</td>
+        <td>A블록</td>
+        <td>700 MHz</td>
+        <td>40 MHz × 2</td>
+        <td>— (입찰자 없음)</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="4">합계 (낙찰분)</td>
+        <td>2조 1,106억원</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="feat-grid">
+  <div class="feat-card"><div class="feat-icon">❌</div><div>
+    <div class="feat-title">700 MHz '황금 주파수' 유찰</div>
+    <div class="feat-body">넓은 커버리지로 황금 주파수라 불리는 700 MHz가 높은 최저가와 투자 부담으로 3사 모두 입찰 포기.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">📦</div><div>
+    <div class="feat-title">SKT, 2.6 GHz 2개 블록 독식</div>
+    <div class="feat-body">D·E 블록을 모두 확보해 60 MHz 광대역 구성. SKT는 "1 MHz당 최저 낙찰가"라고 자평했습니다.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🏎️</div><div>
+    <div class="feat-title">LTE-A 서비스 가속화</div>
+    <div class="feat-body">확보 주파수로 Carrier Aggregation 활용 LTE-A Pro (3CA 이상)와 1 Gbps급 서비스 경쟁 가속.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">💡</div><div>
+    <div class="feat-title">역대 최다 블록 동시 경매</div>
+    <div class="feat-body">4개 대역 5개 블록 동시 경매 역대 최대 규모. 사업자별 전략적 블록 선택의 중요성이 부각되었습니다.</div>
+  </div></div>
+</div>
+
+</div></div>
+
+<!-- ═══════════════════════════ 2018 ═══════════════════════════ -->
+<div id="tab-y2018" class="tab-panel">
+<div class="container">
+
+<div class="sec-head">
+  <div class="year-tag y18">2018년 (5G)</div>
+  <div>
+    <div class="sec-title">제4차 이동통신 주파수 경매</div>
+    <div class="sec-sub">세계 최초 5G 중·고대역 동시 경매 · 2018년 6월 15–18일</div>
+  </div>
+</div>
+
+<div class="meta-row">
+  <div class="meta-chip">📅 <strong>시행</strong> 2018년 6월 15–18일</div>
+  <div class="meta-chip">🔨 <strong>방식</strong> 시계경매 (Clock Auction)</div>
+  <div class="meta-chip">⏱️ <strong>기간</strong> 3.5GHz 9라운드 · 28GHz 1라운드</div>
+  <div class="meta-chip">🌍 <strong>세계 최초</strong> 5G 중·고대역 동시 할당</div>
+  <div class="meta-chip">📡 <strong>공급</strong> 2,680 MHz</div>
+</div>
+
+<div class="spec-wrap">
+  <div class="spec-title">📡 3.5 GHz — 경매 대상 (280 MHz TDD, 블록당 10 MHz, 28블록)</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">3.5 GHz</div>
+      <div class="spec-dir">TDD</div>
+      <div class="spec-mhz">3420–3700 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>3420</span><span>3500</span><span>3600</span><span>3700</span></div>
+      <div class="spec-track">
+        <div class="blk blk-cand" style="flex:80"><span>LGU+ 낙찰 블록 (80 MHz)</span></div>
+        <div class="blk blk-cand" style="flex:100"><span>KT 낙찰 블록 (100 MHz)</span></div>
+        <div class="blk blk-cand" style="flex:100"><span>SKT 낙찰 블록 (100 MHz)</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:#fcc2d7"></div>총 280 MHz 경매 (3,420~3,700 MHz)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-wrap">
+  <div class="spec-title">🏆 3.5 GHz 낙찰 결과</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">3.5 GHz</div>
+      <div class="spec-dir">TDD 낙찰</div>
+      <div class="spec-mhz">3420–3700 MHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>3420</span><span>3500</span><span>3600</span><span>3700</span></div>
+      <div class="spec-track">
+        <div class="blk blk-new-lgu" style="flex:80"><span>LGU+ 80 MHz</span></div>
+        <div class="blk blk-new-kt" style="flex:100"><span>KT 100 MHz</span></div>
+        <div class="blk blk-new-skt" style="flex:100"><span>SKT 100 MHz</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--lgu-l);border-left:3px solid var(--lgu)"></div>LGU+ 3.42–3.50 GHz · 8,095억</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--kt-l);border-left:3px solid var(--kt)"></div>KT 3.50–3.60 GHz · 9,680억</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--skt-l);border-left:3px solid var(--skt)"></div>SKT 3.60–3.70 GHz · 1조 2,185억</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-wrap">
+  <div class="spec-title">🏆 28 GHz 낙찰 결과 (각사 800 MHz, TDD)</div>
+
+  <div class="spec-row">
+    <div class="spec-info">
+      <div class="spec-freq">28 GHz</div>
+      <div class="spec-dir">TDD 낙찰</div>
+      <div class="spec-mhz">26.5–29.5 GHz</div>
+    </div>
+    <div class="spec-body">
+      <div class="spec-scale"><span>26.5</span><span>27.3</span><span>28.1</span><span>28.9</span><span>29.5</span></div>
+      <div class="spec-track">
+        <div class="blk blk-new-kt" style="flex:800"><span>KT 800 MHz</span></div>
+        <div class="blk blk-new-lgu" style="flex:800"><span>LGU+ 800 MHz</span></div>
+        <div class="blk blk-new-skt" style="flex:800"><span>SKT 800 MHz</span></div>
+        <div class="blk blk-empty" style="flex:600"><span>미할당</span></div>
+      </div>
+      <div class="spec-legend">
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--kt-l);border-left:3px solid var(--kt)"></div>KT 26.5–27.3 GHz · 2,078억</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--lgu-l);border-left:3px solid var(--lgu)"></div>LGU+ 27.3–28.1 GHz · 2,072억</div>
+        <div class="spec-leg"><div class="spec-leg-box" style="background:var(--skt-l);border-left:3px solid var(--skt)"></div>SKT 28.1–28.9 GHz · 2,073억</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tbl-wrap">
+  <table>
+    <thead><tr><th>낙찰자</th><th>주파수 대역</th><th>대역폭</th><th>할당 위치</th><th>낙찰 가격</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-badge op-skt">● SKT</span></td><td class="freq-cell">3.5 GHz</td><td>100 MHz</td><td>3.60–3.70 GHz</td><td><div class="price-big">1조 2,185억원</div></td></tr>
+      <tr><td><span class="op-badge op-kt">● KT</span></td><td class="freq-cell">3.5 GHz</td><td>100 MHz</td><td>3.50–3.60 GHz</td><td><div class="price-big">9,680억원</div></td></tr>
+      <tr><td><span class="op-badge op-lgu">● LGU+</span></td><td class="freq-cell">3.5 GHz</td><td>80 MHz</td><td>3.42–3.50 GHz</td><td><div class="price-big">8,095억원</div><div class="price-note">⚠ SKT·KT보다 20 MHz 적음</div></td></tr>
+      <tr><td><span class="op-badge op-skt">● SKT</span></td><td class="freq-cell">28 GHz</td><td>800 MHz</td><td>28.1–28.9 GHz</td><td><div class="price-big">2,073억원</div></td></tr>
+      <tr><td><span class="op-badge op-kt">● KT</span></td><td class="freq-cell">28 GHz</td><td>800 MHz</td><td>26.5–27.3 GHz</td><td><div class="price-big">2,078억원</div></td></tr>
+      <tr><td><span class="op-badge op-lgu">● LGU+</span></td><td class="freq-cell">28 GHz</td><td>800 MHz</td><td>27.3–28.1 GHz</td><td><div class="price-big">2,072억원</div></td></tr>
+      <tr class="total-row"><td colspan="4">합계</td><td>3조 6,183억원</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="feat-grid">
+  <div class="feat-card"><div class="feat-icon">🌍</div><div>
+    <div class="feat-title">세계 최초 중·고대역 동시 경매</div>
+    <div class="feat-body">5G 필수 주파수인 3.5 GHz(중대역)와 28 GHz(초고대역)를 세계 최초로 동시에 경매·할당했습니다.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">⚡</div><div>
+    <div class="feat-title">단 2일 만에 경매 완료</div>
+    <div class="feat-body">3.5 GHz 9라운드(6월 15일), 28 GHz 1라운드(6월 18일)로 신속 종료. 당초 우려보다 경쟁이 덜 치열했습니다.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">📉</div><div>
+    <div class="feat-title">'헐값 경매' 논란</div>
+    <div class="feat-body">역대 최저 MHz당 단가로 공공 주파수를 매각했다는 비판. 3.5 GHz MHz당 단가가 타국 대비 현저히 낮았습니다.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">📐</div><div>
+    <div class="feat-title">LGU+ 80 MHz 불균등 논란</div>
+    <div class="feat-body">SKT·KT는 각 100 MHz, LGU+는 80 MHz로 3사 간 보유량 불균형이 발생했습니다. 이후 재할당 논의로 이어졌습니다.</div>
+  </div></div>
+</div>
+
+</div></div>
+
+<!-- ═══════════════════════════ SKT EVOLUTION ═══════════════════════════ -->
+<div id="tab-skt" class="tab-panel">
+<div class="container">
+
+<div class="sec-head">
+  <div class="year-tag yevo">SKT 변천사</div>
+  <div>
+    <div class="sec-title">SK Telecom 이동통신 주파수 변천사</div>
+    <div class="sec-sub">1G (1980s) → 2G → 3G → 4G → 5G (현재)</div>
+  </div>
+</div>
+
+<!-- Generation Timeline -->
+<div class="gen-timeline">
+  <div class="gen-block">
+    <div class="gen-label">1G</div>
+    <div class="gen-year">1988</div>
+    <div class="gen-bands">
+      <div class="gen-band gb-800">800 MHz<br><small>AMPS</small></div>
+    </div>
+  </div>
+  <div class="gen-block">
+    <div class="gen-label">2G</div>
+    <div class="gen-year">1996</div>
+    <div class="gen-bands">
+      <div class="gen-band gb-800">800 MHz<br><small>CDMA</small></div>
+      <div class="gen-band gb-18">1.8 GHz<br><small>PCS</small></div>
+    </div>
+  </div>
+  <div class="gen-block">
+    <div class="gen-label">3G</div>
+    <div class="gen-year">2003</div>
+    <div class="gen-bands">
+      <div class="gen-band gb-800">800 MHz</div>
+      <div class="gen-band gb-18">1.8 GHz</div>
+      <div class="gen-band gb-21">2.1 GHz<br><small>WCDMA</small></div>
+    </div>
+  </div>
+  <div class="gen-block">
+    <div class="gen-label">4G</div>
+    <div class="gen-year">2011</div>
+    <div class="gen-bands">
+      <div class="gen-band gb-800">800 MHz</div>
+      <div class="gen-band gb-18">1.8 GHz ★</div>
+      <div class="gen-band gb-21">2.1 GHz</div>
+      <div class="gen-band gb-26">2.6 GHz ★</div>
+    </div>
+  </div>
+  <div class="gen-block">
+    <div class="gen-label">5G</div>
+    <div class="gen-year">2019</div>
+    <div class="gen-bands">
+      <div class="gen-band gb-800">800 MHz</div>
+      <div class="gen-band gb-18">1.8 GHz</div>
+      <div class="gen-band gb-26">2.6 GHz</div>
+      <div class="gen-band gb-35">3.5 GHz ★</div>
+      <div class="gen-band gb-28">28 GHz ★</div>
+    </div>
+  </div>
+</div>
+
+<!-- Layer Chart -->
+<div class="layer-chart">
+  <div class="layer-title">📊 SKT 주파수 레이어 구조 (5G 현재 기준)</div>
+  <div class="layer-row">
+    <div class="layer-freq">800 MHz</div>
+    <div class="layer-role" style="color:#e67700;font-weight:700">Coverage</div>
+    <div class="layer-bars">
+      <div class="layer-bar" style="flex:1;background:#f59f00">1G</div>
+      <div class="layer-bar" style="flex:1;background:#f08c00">2G</div>
+      <div class="layer-bar" style="flex:1;background:#e67700">3G</div>
+      <div class="layer-bar" style="flex:1;background:#d9480f">4G</div>
+      <div class="layer-bar" style="flex:1;background:#c92a2a">5G (앵커)</div>
+    </div>
+  </div>
+  <div class="layer-row">
+    <div class="layer-freq">1.8 GHz</div>
+    <div class="layer-role" style="color:var(--green);font-weight:700">Capacity</div>
+    <div class="layer-bars">
+      <div class="layer-bar" style="width:20%;background:#dee2e6;color:#868e96">—</div>
+      <div class="layer-bar" style="flex:1;background:#40c057">2G 추가</div>
+      <div class="layer-bar" style="flex:1;background:#37b24d">3G 보조</div>
+      <div class="layer-bar" style="flex:2;background:#2f9e44">4G 핵심 ★</div>
+      <div class="layer-bar" style="flex:1;background:#2b8a3e">5G 보조</div>
+    </div>
+  </div>
+  <div class="layer-row">
+    <div class="layer-freq">2.1 GHz</div>
+    <div class="layer-role" style="color:var(--kt);font-weight:700">Data</div>
+    <div class="layer-bars">
+      <div class="layer-bar" style="width:40%;background:#dee2e6;color:#868e96">—</div>
+      <div class="layer-bar" style="flex:1;background:#339af0">3G 핵심</div>
+      <div class="layer-bar" style="flex:1;background:#228be6">4G 보조</div>
+      <div class="layer-bar" style="flex:1;background:#1971c2">5G 보조</div>
+    </div>
+  </div>
+  <div class="layer-row">
+    <div class="layer-freq">2.6 GHz</div>
+    <div class="layer-role" style="color:var(--lgu);font-weight:700">Hotspot</div>
+    <div class="layer-bars">
+      <div class="layer-bar" style="width:60%;background:#dee2e6;color:#868e96">—</div>
+      <div class="layer-bar" style="flex:2;background:#7950f2">4G 고용량 ★</div>
+      <div class="layer-bar" style="flex:1;background:#6741d9">5G 보조</div>
+    </div>
+  </div>
+  <div class="layer-row">
+    <div class="layer-freq">3.5 GHz</div>
+    <div class="layer-role" style="color:var(--skt);font-weight:700">5G Primary</div>
+    <div class="layer-bars">
+      <div class="layer-bar" style="width:80%;background:#dee2e6;color:#868e96">—</div>
+      <div class="layer-bar" style="flex:1;background:#c92a2a">5G 핵심 ★</div>
+    </div>
+  </div>
+  <div class="layer-row">
+    <div class="layer-freq">28 GHz</div>
+    <div class="layer-role" style="color:#862e9c;font-weight:700">mmWave</div>
+    <div class="layer-bars">
+      <div class="layer-bar" style="width:80%;background:#dee2e6;color:#868e96">—</div>
+      <div class="layer-bar" style="flex:1;background:#862e9c">5G Hotspot</div>
+    </div>
+  </div>
+</div>
+
+<!-- Evolution table -->
+<div class="evo-matrix" style="margin-bottom:24px">
+  <table>
+    <thead>
+      <tr>
+        <th>주파수 대역</th>
+        <th>1G (1988)</th>
+        <th>2G (1996)</th>
+        <th>3G (2003)</th>
+        <th>4G (2011)</th>
+        <th>5G (2019)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>800 MHz</td>
+        <td class="evo-cell-on">AMPS<br>Coverage</td>
+        <td class="evo-cell-on">CDMA<br>Coverage</td>
+        <td class="evo-cell-on">Coverage</td>
+        <td class="evo-cell-on">LTE<br>Coverage</td>
+        <td class="evo-cell-on">5G 앵커<br>Coverage</td>
+      </tr>
+      <tr>
+        <td>1.8 GHz</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-on">PCS<br>Capacity</td>
+        <td class="evo-cell-on">Capacity</td>
+        <td class="evo-cell-new">LTE 핵심 ★<br>(2011 낙찰)</td>
+        <td class="evo-cell-on">5G 보조</td>
+      </tr>
+      <tr>
+        <td>2.1 GHz</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-on">WCDMA<br>핵심</td>
+        <td class="evo-cell-on">LTE 보조</td>
+        <td class="evo-cell-on">5G 보조</td>
+      </tr>
+      <tr>
+        <td>2.6 GHz</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-new">LTE Hotspot ★<br>(2016 낙찰 D+E)</td>
+        <td class="evo-cell-on">5G 보조</td>
+      </tr>
+      <tr>
+        <td>3.5 GHz</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-new">5G 핵심 ★<br>(2018 낙찰 100MHz)</td>
+      </tr>
+      <tr>
+        <td>28 GHz</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-off">—</td>
+        <td class="evo-cell-new">5G mmWave ★<br>(2018 낙찰 800MHz)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Narrative sections -->
+<div class="feat-grid">
+  <div class="feat-card"><div class="feat-icon">📡</div><div>
+    <div class="feat-title">1G (1988) — 800 MHz AMPS</div>
+    <div class="feat-body">아날로그 음성 통신. 낮은 주파수로 넓은 커버리지 확보. '황금 대역'의 시작. 커버리지가 곧 경쟁력.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">📟</div><div>
+    <div class="feat-title">2G (1996) — 세계 최초 CDMA 상용화</div>
+    <div class="feat-body">800 MHz Coverage + 1.8 GHz (PCS) Capacity 이중 레이어 전략의 시작. 디지털 전환으로 용량 대폭 증가.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">📱</div><div>
+    <div class="feat-title">3G (2003) — 2.1 GHz WCDMA</div>
+    <div class="feat-body">스마트폰 시대 준비. 음성→데이터 전환. 2.1 GHz IMT-2000 밴드 추가. 그러나 커버리지 한계로 저주파 병행 유지.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🚀</div><div>
+    <div class="feat-title">4G (2011~) — 멀티밴드 전략 본격화</div>
+    <div class="feat-body">2011년 1.8 GHz 낙찰 (9,950억). 2016년 2.6 GHz D·E블록 추가. CA로 Low+Mid+High band 결합해 1 Gbps급 달성.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🔵</div><div>
+    <div class="feat-title">5G (2019~) — 계층화 아키텍처 완성</div>
+    <div class="feat-body">3.5 GHz(100 MHz) = 5G 핵심 커버리지+용량. 28 GHz(800 MHz) = 초고속 핫스팟. 800 MHz = 광역 앵커. 3계층 구조 완성.</div>
+  </div></div>
+  <div class="feat-card"><div class="feat-icon">🧠</div><div>
+    <div class="feat-title">핵심 전략: Spectrum Layering</div>
+    <div class="feat-body">저대역(~1 GHz) → Coverage / 중대역(1~3 GHz) → Capacity / 고대역(3.5·28 GHz) → Speed+Hotspot. 세대를 거쳐 레이어 추가.</div>
+  </div></div>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:8px">
+  <div style="font-weight:800;font-size:15px;margin-bottom:14px">📋 전체 SKT 주파수 진화 요약</div>
+  <div style="font-family:monospace;font-size:13px;line-height:2;color:var(--tp);background:var(--surface2);padding:16px;border-radius:8px;border:1px solid var(--border)">
+    <div>1G (1988):  <span style="color:#e67700">████</span> <span style="color:#868e96">800 MHz — Coverage only (AMPS)</span></div>
+    <div>2G (1996):  <span style="color:#e67700">████</span> <span style="color:#2f9e44">████</span> <span style="color:#868e96">800 + 1.8 GHz — Coverage + Capacity (CDMA)</span></div>
+    <div>3G (2003):  <span style="color:#e67700">████</span> <span style="color:#2f9e44">████</span> <span style="color:#1971c2">████</span> <span style="color:#868e96">+ 2.1 GHz — Data 시작 (WCDMA)</span></div>
+    <div>4G (2011):  <span style="color:#e67700">████</span> <span style="color:#2f9e44">████████</span> <span style="color:#1971c2">████</span> <span style="color:#6741d9">████████</span> <span style="color:#868e96">Multi-band LTE (CA)</span></div>
+    <div>5G (2019):  <span style="color:#e67700">████</span> <span style="color:#2f9e44">████████</span> <span style="color:#6741d9">████████</span> <span style="color:#c92a2a">████████</span> <span style="color:#862e9c">████</span> <span style="color:#868e96">Layered 5G</span></div>
+  </div>
+</div>
+
+</div></div>
+
+<footer style="text-align:center;padding:28px 24px;border-top:1px solid var(--border);color:var(--tm);font-size:12px;background:var(--surface)">
+  <p>자료 출처: 과학기술정보통신부 · 방송통신위원회 · 대한민국 정책브리핑 · 공개 보도자료</p>
+  <p style="margin-top:6px">본 페이지는 공개된 정부 자료 및 보도 자료를 기반으로 작성되었습니다.</p>
+</footer>
+
+<script>
+function showTab(id){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
