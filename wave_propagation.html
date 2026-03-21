@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RF Wave Propagation Characteristics | 전파 특성</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c-abs:#c0392b; --c-ref:#1565c0; --c-sca:#d35400;
+  --c-rfr:#1b7c3a; --c-dif:#6a0dad; --c-att:#0277bd; --c-mlt:#00695c;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#2c3e50;font-size:15px;line-height:1.7}
+/* HEADER */
+header{background:linear-gradient(135deg,#0d2b6e,#1565c0,#0288d1);color:#fff;padding:44px 24px 36px;text-align:center}
+header h1{font-size:2.3em;font-weight:800;margin-bottom:10px;letter-spacing:-.5px}
+header p{font-size:1.05em;opacity:.85}
+/* NAV */
+nav{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.13);position:sticky;top:0;z-index:200;overflow-x:auto;white-space:nowrap}
+nav ul{display:inline-flex;list-style:none;min-width:100%;justify-content:center;padding:0}
+nav a{display:inline-block;padding:13px 14px;text-decoration:none;color:#555;font-size:.85em;font-weight:600;border-bottom:3px solid transparent;transition:all .2s}
+nav a:hover{color:#1565c0;border-bottom-color:#1565c0;background:#e3f2fd}
+/* LAYOUT */
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+.sec{padding:52px 0;scroll-margin-top:56px}
+.sec-alt{background:#fff}
+/* TOPIC HEADER */
+.t-head{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding-bottom:16px;border-bottom:3px solid currentColor}
+.badge{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:800;color:#fff;flex-shrink:0}
+.t-name{font-size:1.9em;font-weight:800;line-height:1.1}
+.t-ko{font-size:.52em;font-weight:400;opacity:.68}
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}header h1{font-size:1.6em}.t-name{font-size:1.4em}}
+/* CARDS */
+.card{background:#fff;border-radius:12px;padding:20px 22px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.card+.card{margin-top:14px}
+.card h4{font-size:.98em;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #eee}
+.card p,.card li{font-size:.92em;line-height:1.7}
+.card ul{padding-left:18px}
+.card li{margin-bottom:5px}
+/* KEY POINT */
+.kp{border-radius:8px;padding:11px 15px;margin-top:12px;font-size:.87em;border-left:4px solid}
+/* TABLE */
+.dtbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:.88em}
+.dtbl th{padding:9px 12px;text-align:left;font-weight:600;color:#fff}
+.dtbl td{padding:8px 12px;border-bottom:1px solid #f0f0f0}
+.dtbl tbody tr:hover td{background:#f8f8f8}
+.dtbl tbody tr:last-child td{border-bottom:none}
+/* DIAGRAM CARD */
+.dc{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden}
+.dc-title{padding:13px 18px 10px;font-size:.9em;font-weight:700;color:#444;border-bottom:1px solid #f0f0f0}
+.dc-body{padding:14px;background:#f7f8ff}
+/* OVERVIEW */
+.ov-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);padding:20px;overflow:hidden}
+.ov-title{text-align:center;font-size:1.55em;font-weight:700;color:#0d2b6e;margin-bottom:28px}
+/* COLOR THEMES */
+.abs .t-head{border-color:var(--c-abs)}.abs .t-name{color:var(--c-abs)}.abs .badge{background:var(--c-abs)}.abs .card h4{border-color:var(--c-abs);color:var(--c-abs)}.abs .kp{border-color:var(--c-abs);background:#fff5f5}.abs .dtbl th{background:var(--c-abs)}
+.ref .t-head{border-color:var(--c-ref)}.ref .t-name{color:var(--c-ref)}.ref .badge{background:var(--c-ref)}.ref .card h4{border-color:var(--c-ref);color:var(--c-ref)}.ref .kp{border-color:var(--c-ref);background:#e3f2fd}.ref .dtbl th{background:var(--c-ref)}
+.sca .t-head{border-color:var(--c-sca)}.sca .t-name{color:var(--c-sca)}.sca .badge{background:var(--c-sca)}.sca .card h4{border-color:var(--c-sca);color:var(--c-sca)}.sca .kp{border-color:var(--c-sca);background:#fff8f0}.sca .dtbl th{background:var(--c-sca)}
+.rfr .t-head{border-color:var(--c-rfr)}.rfr .t-name{color:var(--c-rfr)}.rfr .badge{background:var(--c-rfr)}.rfr .card h4{border-color:var(--c-rfr);color:var(--c-rfr)}.rfr .kp{border-color:var(--c-rfr);background:#f0fdf4}.rfr .dtbl th{background:var(--c-rfr)}
+.dif .t-head{border-color:var(--c-dif)}.dif .t-name{color:var(--c-dif)}.dif .badge{background:var(--c-dif)}.dif .card h4{border-color:var(--c-dif);color:var(--c-dif)}.dif .kp{border-color:var(--c-dif);background:#faf5ff}.dif .dtbl th{background:var(--c-dif)}
+.att .t-head{border-color:var(--c-att)}.att .t-name{color:var(--c-att)}.att .badge{background:var(--c-att)}.att .card h4{border-color:var(--c-att);color:var(--c-att)}.att .kp{border-color:var(--c-att);background:#e1f5fe}.att .dtbl th{background:var(--c-att)}
+.mlt .t-head{border-color:var(--c-mlt)}.mlt .t-name{color:var(--c-mlt)}.mlt .badge{background:var(--c-mlt)}.mlt .card h4{border-color:var(--c-mlt);color:var(--c-mlt)}.mlt .kp{border-color:var(--c-mlt);background:#e0f2f1}.mlt .dtbl th{background:var(--c-mlt)}
+/* SVG anim */
+@keyframes wavePulse{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes moveRight{from{stroke-dashoffset:200}to{stroke-dashoffset:0}}
+footer{background:#0d2b6e;color:#fff;text-align:center;padding:28px;margin-top:60px;font-size:.88em;opacity:.92}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ RF Wave Propagation Characteristics</h1>
+  <p>무선 주파수(RF) 신호의 주요 전파 특성 | 데이터통신 강의자료</p>
+</header>
+
+<nav>
+  <ul>
+    <li><a href="#overview">📡 Overview</a></li>
+    <li><a href="#absorption">① Absorption 흡수</a></li>
+    <li><a href="#reflection">② Reflection 반사</a></li>
+    <li><a href="#scattering">③ Scattering 산란</a></li>
+    <li><a href="#refraction">④ Refraction 굴절</a></li>
+    <li><a href="#diffraction">⑤ Diffraction 회절</a></li>
+    <li><a href="#attenuation">⑥ Attenuation 감쇄</a></li>
+    <li><a href="#multipath">⑦ Multipath 다중경로</a></li>
+  </ul>
+</nav>
+
+<!-- ===== OVERVIEW ===== -->
+<section id="overview" class="sec">
+<div class="wrap">
+  <h2 class="ov-title">RF 전파 특성 종합 개요 (All Propagation Characteristics)</h2>
+  <div class="ov-card">
+    <svg width="100%" viewBox="0 0 1060 530" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#cce0ff"/><stop offset="55%" stop-color="#eef6ff"/><stop offset="100%" stop-color="#edfae4"/></linearGradient>
+        <marker id="mr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#c0392b"/></marker>
+        <marker id="mb" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#1565c0"/></marker>
+        <marker id="mo" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#d35400"/></marker>
+        <marker id="mg" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#1b7c3a"/></marker>
+        <marker id="mp" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#6a0dad"/></marker>
+        <marker id="mt" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#0277bd"/></marker>
+        <marker id="md" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#00695c"/></marker>
+      </defs>
+      <!-- bg -->
+      <rect width="1060" height="530" fill="url(#skyG)"/>
+      <!-- atmosphere bands -->
+      <rect x="0" y="0" width="1060" height="68" fill="#b3d4ff" opacity=".45"/>
+      <text x="12" y="20" fill="#3b7fd4" font-size="11" font-style="italic">Ionosphere</text>
+      <rect x="0" y="68" width="1060" height="68" fill="#d4e9ff" opacity=".3"/>
+      <text x="12" y="90" fill="#5a9fe0" font-size="11" font-style="italic">Troposphere</text>
+      <line x1="0" y1="68" x2="1060" y2="68" stroke="#93c5fd" stroke-width="1" stroke-dasharray="5,5"/>
+      <line x1="0" y1="136" x2="1060" y2="136" stroke="#bfdbfe" stroke-width="1" stroke-dasharray="5,5"/>
+      <!-- ground -->
+      <rect x="0" y="440" width="1060" height="90" fill="#a8d5a2" opacity=".7"/>
+      <rect x="0" y="436" width="1060" height="8" fill="#4caf50" opacity=".6"/>
+      <!-- TX -->
+      <line x1="75" y1="440" x2="75" y2="315" stroke="#374151" stroke-width="5"/>
+      <line x1="57" y1="325" x2="93" y2="325" stroke="#374151" stroke-width="3"/>
+      <line x1="60" y1="340" x2="90" y2="340" stroke="#374151" stroke-width="3"/>
+      <line x1="63" y1="355" x2="87" y2="355" stroke="#374151" stroke-width="3"/>
+      <line x1="75" y1="315" x2="75" y2="282" stroke="#c0392b" stroke-width="4"/>
+      <circle cx="75" cy="277" r="7" fill="#c0392b"/>
+      <rect x="42" y="440" width="66" height="11" fill="#6b7280" rx="2"/>
+      <text x="75" y="468" fill="#1a1a1a" font-size="13" font-weight="bold" text-anchor="middle">TX</text>
+      <circle cx="75" cy="277" r="18" fill="none" stroke="#c0392b" stroke-width="1.5" opacity=".7"><animate attributeName="r" values="8;36" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="75" cy="277" r="18" fill="none" stroke="#c0392b" stroke-width="1.5"><animate attributeName="r" values="8;36" dur="2s" begin=".7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="2s" begin=".7s" repeatCount="indefinite"/></circle>
+      <!-- RX -->
+      <line x1="980" y1="440" x2="980" y2="340" stroke="#374151" stroke-width="5"/>
+      <line x1="965" y1="350" x2="995" y2="350" stroke="#374151" stroke-width="3"/>
+      <line x1="968" y1="363" x2="992" y2="363" stroke="#374151" stroke-width="3"/>
+      <line x1="980" y1="340" x2="980" y2="310" stroke="#1565c0" stroke-width="4"/>
+      <circle cx="980" cy="305" r="7" fill="#1565c0"/>
+      <rect x="952" y="440" width="56" height="11" fill="#6b7280" rx="2"/>
+      <text x="980" y="468" fill="#1a1a1a" font-size="13" font-weight="bold" text-anchor="middle">RX</text>
+      <!-- Building 1 tall (center-left) -->
+      <rect x="355" y="255" width="78" height="185" fill="#94a3b8" rx="3"/>
+      <rect x="355" y="255" width="78" height="185" fill="none" stroke="#64748b" stroke-width="1.5" rx="3"/>
+      <rect x="365" y="268" width="13" height="16" fill="#bae6fd" rx="1"/>
+      <rect x="386" y="268" width="13" height="16" fill="#bae6fd" rx="1"/>
+      <rect x="407" y="268" width="13" height="16" fill="#bae6fd" rx="1"/>
+      <rect x="365" y="296" width="13" height="16" fill="#bae6fd" rx="1"/>
+      <rect x="386" y="296" width="13" height="16" fill="#bae6fd" rx="1"/>
+      <rect x="407" y="296" width="13" height="16" fill="#bae6fd" rx="1"/>
+      <rect x="365" y="324" width="13" height="16" fill="#7dd3fc" rx="1"/>
+      <rect x="386" y="324" width="13" height="16" fill="#7dd3fc" rx="1"/>
+      <rect x="407" y="324" width="13" height="16" fill="#7dd3fc" rx="1"/>
+      <!-- Building 2 (center-right) for absorption -->
+      <rect x="630" y="305" width="88" height="135" fill="#9ca3af" rx="3"/>
+      <rect x="630" y="305" width="88" height="135" fill="none" stroke="#6b7280" stroke-width="1.5" rx="3"/>
+      <rect x="642" y="318" width="16" height="20" fill="#bae6fd" rx="1"/>
+      <rect x="668" y="318" width="16" height="20" fill="#bae6fd" rx="1"/>
+      <rect x="694" y="318" width="16" height="20" fill="#bae6fd" rx="1"/>
+      <rect x="642" y="352" width="16" height="20" fill="#7dd3fc" rx="1"/>
+      <rect x="668" y="352" width="16" height="20" fill="#7dd3fc" rx="1"/>
+      <rect x="694" y="352" width="16" height="20" fill="#7dd3fc" rx="1"/>
+      <!-- Trees for scattering -->
+      <ellipse cx="225" cy="395" rx="32" ry="23" fill="#16a34a"/>
+      <ellipse cx="247" cy="412" rx="26" ry="19" fill="#22c55e"/>
+      <ellipse cx="207" cy="412" rx="24" ry="17" fill="#15803d"/>
+      <rect x="232" y="422" width="9" height="22" fill="#92400e"/>
+
+      <!-- ① ABSORPTION: strong ray → building 2 → weak exit -->
+      <line x1="118" y1="372" x2="628" y2="372" stroke="#c0392b" stroke-width="3.5" marker-end="url(#mr)"/>
+      <line x1="720" y1="372" x2="840" y2="372" stroke="#c0392b" stroke-width="1.2" opacity=".35" marker-end="url(#mr)"/>
+      <circle cx="650" cy="372" r="3.5" fill="#ef4444" opacity=".7"/>
+      <circle cx="668" cy="366" r="2.5" fill="#ef4444" opacity=".55"/>
+      <circle cx="682" cy="378" r="2" fill="#ef4444" opacity=".45"/>
+      <circle cx="700" cy="369" r="1.8" fill="#ef4444" opacity=".35"/>
+      <rect x="310" y="385" width="120" height="22" rx="5" fill="white" opacity=".92"/>
+      <text x="318" y="400" font-size="12" font-weight="bold" fill="#c0392b">① Absorption (흡수)</text>
+
+      <!-- ② REFLECTION: ray to building1, bounce up-left -->
+      <line x1="118" y1="310" x2="353" y2="283" stroke="#1565c0" stroke-width="2.5" marker-end="url(#mb)"/>
+      <line x1="353" y1="283" x2="210" y2="220" stroke="#1565c0" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#mb)"/>
+      <rect x="155" y="192" width="120" height="22" rx="5" fill="white" opacity=".92"/>
+      <text x="163" y="207" font-size="12" font-weight="bold" fill="#1565c0">② Reflection (반사)</text>
+
+      <!-- ③ SCATTERING: ray to trees, scatter out -->
+      <line x1="118" y1="355" x2="198" y2="393" stroke="#d35400" stroke-width="2.5" marker-end="url(#mo)"/>
+      <line x1="228" y1="385" x2="286" y2="358" stroke="#d35400" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#mo)"/>
+      <line x1="230" y1="393" x2="288" y2="418" stroke="#d35400" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#mo)"/>
+      <line x1="225" y1="387" x2="172" y2="358" stroke="#d35400" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#mo)"/>
+      <line x1="224" y1="383" x2="220" y2="342" stroke="#d35400" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#mo)"/>
+      <rect x="275" y="428" width="115" height="22" rx="5" fill="white" opacity=".92"/>
+      <text x="283" y="443" font-size="12" font-weight="bold" fill="#d35400">③ Scattering (산란)</text>
+
+      <!-- ④ REFRACTION: signal bends through atmosphere -->
+      <line x1="118" y1="262" x2="320" y2="118" stroke="#1b7c3a" stroke-width="2.5" marker-end="url(#mg)"/>
+      <path d="M320,118 Q540,55 750,82 Q840,96 888,140" stroke="#1b7c3a" stroke-width="2.5" fill="none" stroke-dasharray="8,4" marker-end="url(#mg)"/>
+      <line x1="888" y1="140" x2="968" y2="308" stroke="#1b7c3a" stroke-width="2.5" stroke-dasharray="8,4" marker-end="url(#mg)"/>
+      <rect x="430" y="46" width="120" height="22" rx="5" fill="white" opacity=".92"/>
+      <text x="438" y="61" font-size="12" font-weight="bold" fill="#1b7c3a">④ Refraction (굴절)</text>
+
+      <!-- ⑤ DIFFRACTION: wave bends around building 1 top -->
+      <line x1="118" y1="288" x2="353" y2="257" stroke="#6a0dad" stroke-width="2.5" marker-end="url(#mp)"/>
+      <path d="M433,255 Q500,200 570,225 Q615,242 628,295" stroke="#6a0dad" stroke-width="2.5" fill="none" stroke-dasharray="8,4" marker-end="url(#mp)"/>
+      <!-- RF shadow -->
+      <rect x="718" y="305" width="65" height="135" fill="#fbbf24" opacity=".18" rx="4"/>
+      <text x="723" y="368" font-size="9.5" fill="#d97706" font-style="italic">RF Shadow</text>
+      <rect x="490" y="168" width="120" height="22" rx="5" fill="white" opacity=".92"/>
+      <text x="498" y="183" font-size="12" font-weight="bold" fill="#6a0dad">⑤ Diffraction (회절)</text>
+
+      <!-- ⑥ ATTENUATION: direct path, tapering strength -->
+      <line x1="118" y1="415" x2="330" y2="415" stroke="#0277bd" stroke-width="4.5" opacity="1"/>
+      <line x1="330" y1="415" x2="540" y2="415" stroke="#0277bd" stroke-width="3" opacity=".7"/>
+      <line x1="540" y1="415" x2="750" y2="415" stroke="#0277bd" stroke-width="1.8" opacity=".45"/>
+      <line x1="750" y1="415" x2="955" y2="415" stroke="#0277bd" stroke-width="1" opacity=".22" marker-end="url(#mt)"/>
+      <text x="118" y="432" font-size="9.5" fill="#0277bd">▶ Strong</text>
+      <text x="510" y="432" font-size="9.5" fill="#0277bd">▶ Medium</text>
+      <text x="870" y="432" font-size="9.5" fill="#0277bd">▶ Weak</text>
+      <rect x="300" y="448" width="145" height="22" rx="5" fill="white" opacity=".92"/>
+      <text x="308" y="463" font-size="12" font-weight="bold" fill="#0277bd">⑥ Attenuation (감쇄)</text>
+
+      <!-- ⑦ MULTIPATH: ground-bounce and building-reflect paths -->
+      <path d="M118,335 Q540,500 955,335" stroke="#00695c" stroke-width="2" fill="none" stroke-dasharray="7,4" marker-end="url(#md)"/>
+      <path d="M118,322 L370,268 L710,330 L955,322" stroke="#00695c" stroke-width="2" fill="none" stroke-dasharray="7,4" marker-end="url(#md)"/>
+      <rect x="770" y="492" width="138" height="22" rx="5" fill="white" opacity=".92"/>
+      <text x="778" y="507" font-size="12" font-weight="bold" fill="#00695c">⑦ Multipath (다중경로)</text>
+    </svg>
+  </div>
+</div>
+</section>
+
+<!-- ===== 1. ABSORPTION ===== -->
+<section id="absorption" class="sec sec-alt abs">
+<div class="wrap">
+  <div class="t-head">
+    <div class="badge">1</div>
+    <div><div class="t-name">Absorption <span class="t-ko">(흡수)</span></div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h4>정의 및 특성</h4>
+        <p>대부분의 재질은 RF 신호의 에너지 일부를 흡수합니다. 흡수 정도는 재질의 종류와 주파수에 따라 다릅니다.</p>
+        <ul style="margin-top:10px">
+          <li>벽돌·콘크리트 벽 → 신호를 크게 흡수</li>
+          <li><strong>2.4 GHz 신호 + 콘크리트 벽</strong> → 원래 전력의 <strong>1/16</strong> (−12 dB)</li>
+          <li><strong>2.4 GHz 신호 + 석고보드(Drywall)</strong> → 원래 전력의 <strong>1/2</strong> (−3 dB)</li>
+          <li><strong>물(Water)</strong>은 RF 신호를 강하게 흡수하는 대표적 매질</li>
+          <li>흡수(Absorption)는 신호 감쇄(Attenuation)의 주요 원인</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>사용자 밀도 (User Density)</h4>
+        <p>성인 인체의 <strong>50~65%는 수분</strong>으로 이루어져 있습니다. 사람이 밀집할수록 인체에 의한 흡수가 증가하여 WLAN 성능이 저하됩니다.</p>
+        <div class="kp">🏢 <strong>공항 사례:</strong> Barrett씨는 공항 터미널의 무선망 설계 후 AP 배치를 완료했습니다. 이후 눈보라로 승객이 몰린 날, WLAN 품질이 크게 저하되었습니다. 원인은 인체에 의한 흡수였습니다.</div>
+        <div class="kp" style="margin-top:8px">💡 무선 네트워크 설계 시 최대 <strong>사용자 밀도(User Density)</strong>를 반드시 고려해야 합니다.</div>
+      </div>
+    </div>
+    <div>
+      <div class="dc">
+        <div class="dc-title">흡수 애니메이션 (Absorption Animation)</div>
+        <div class="dc-body">
+          <svg width="100%" viewBox="0 0 400 230">
+            <rect width="400" height="230" fill="#fff9f9" rx="6"/>
+            <!-- TX -->
+            <line x1="42" y1="50" x2="42" y2="175" stroke="#555" stroke-width="3"/>
+            <line x1="28" y1="58" x2="56" y2="58" stroke="#555" stroke-width="2"/>
+            <line x1="30" y1="70" x2="54" y2="70" stroke="#555" stroke-width="2"/>
+            <line x1="32" y1="82" x2="52" y2="82" stroke="#555" stroke-width="2"/>
+            <text x="42" y="195" font-size="11" font-weight="bold" fill="#555" text-anchor="middle">TX</text>
+            <!-- Concrete wall -->
+            <rect x="158" y="38" width="44" height="155" fill="#94a3b8" rx="2"/>
+            <!-- Brick pattern -->
+            <line x1="158" y1="65" x2="202" y2="65" stroke="#64748b" stroke-width=".8"/>
+            <line x1="158" y1="92" x2="202" y2="92" stroke="#64748b" stroke-width=".8"/>
+            <line x1="158" y1="119" x2="202" y2="119" stroke="#64748b" stroke-width=".8"/>
+            <line x1="158" y1="146" x2="202" y2="146" stroke="#64748b" stroke-width=".8"/>
+            <line x1="180" y1="38" x2="180" y2="65" stroke="#64748b" stroke-width=".8"/>
+            <line x1="180" y1="92" x2="180" y2="119" stroke="#64748b" stroke-width=".8"/>
+            <line x1="180" y1="146" x2="180" y2="193" stroke="#64748b" stroke-width=".8"/>
+            <text x="180" y="28" font-size="9.5" fill="#475569" text-anchor="middle">Concrete Wall</text>
+            <!-- RX -->
+            <line x1="355" y1="50" x2="355" y2="175" stroke="#555" stroke-width="3"/>
+            <line x1="342" y1="58" x2="368" y2="58" stroke="#555" stroke-width="2"/>
+            <line x1="345" y1="70" x2="365" y2="70" stroke="#555" stroke-width="2"/>
+            <text x="355" y="195" font-size="11" font-weight="bold" fill="#555" text-anchor="middle">RX</text>
+            <!-- Strong waves (left) -->
+            <path d="M68,78 Q79,62 90,78 Q101,94 112,78 Q123,62 134,78" stroke="#c0392b" stroke-width="2.5" fill="none" opacity=".9"><animate attributeName="opacity" values=".9;.3;.9" dur="1.6s" repeatCount="indefinite"/></path>
+            <path d="M68,108 Q79,92 90,108 Q101,124 112,108 Q123,92 134,108" stroke="#c0392b" stroke-width="2.5" fill="none" opacity=".85"><animate attributeName="opacity" values=".85;.25;.85" dur="1.6s" begin=".5s" repeatCount="indefinite"/></path>
+            <path d="M68,138 Q79,122 90,138 Q101,154 112,138 Q123,122 134,138" stroke="#c0392b" stroke-width="2.5" fill="none" opacity=".8"><animate attributeName="opacity" values=".8;.2;.8" dur="1.6s" begin="1s" repeatCount="indefinite"/></path>
+            <!-- Absorb inside wall -->
+            <circle cx="168" cy="88" r="3" fill="#ef4444" opacity=".7"/>
+            <circle cx="184" cy="105" r="2.5" fill="#ef4444" opacity=".6"/>
+            <circle cx="172" cy="125" r="2" fill="#ef4444" opacity=".5"/>
+            <circle cx="190" cy="143" r="1.8" fill="#ef4444" opacity=".4"/>
+            <!-- Weak waves (right) -->
+            <path d="M212,93 Q218,85 224,93 Q230,101 236,93 Q242,85 248,93" stroke="#c0392b" stroke-width="1.5" fill="none" opacity=".45"><animate attributeName="opacity" values=".45;.1;.45" dur="1.6s" repeatCount="indefinite"/></path>
+            <path d="M212,113 Q218,105 224,113 Q230,121 236,113 Q242,105 248,113" stroke="#c0392b" stroke-width="1.5" fill="none" opacity=".4"><animate attributeName="opacity" values=".4;.08;.4" dur="1.6s" begin=".5s" repeatCount="indefinite"/></path>
+            <path d="M212,133 Q218,125 224,133 Q230,141 236,133 Q242,125 248,133" stroke="#c0392b" stroke-width="1" fill="none" opacity=".35"><animate attributeName="opacity" values=".35;.08;.35" dur="1.6s" begin="1s" repeatCount="indefinite"/></path>
+            <text x="92" y="210" font-size="10.5" fill="#c0392b" font-weight="bold" text-anchor="middle">강한 신호 ▶</text>
+            <text x="240" y="210" font-size="10.5" fill="#c0392b" opacity=".55" font-weight="bold" text-anchor="middle">▶ 약한 신호</text>
+          </svg>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h4>재질별 신호 감쇄 (2.4 GHz)</h4>
+        <table class="dtbl">
+          <thead><tr><th>재질 (Material)</th><th>감쇄량</th></tr></thead>
+          <tbody>
+            <tr><td>Elevator shaft (엘리베이터 통로)</td><td><strong>−30 dB</strong></td></tr>
+            <tr><td>Concrete wall (콘크리트 벽)</td><td>−12 dB</td></tr>
+            <tr><td>Wood door (목재 문)</td><td>−3 dB</td></tr>
+            <tr><td>Nontinted glass windows</td><td>−3 dB</td></tr>
+            <tr><td>Drywall (석고보드)</td><td>−3 dB</td></tr>
+            <tr><td>Drywall (hollow)</td><td>−2 dB</td></tr>
+            <tr><td>Cubicle wall (칸막이)</td><td>−1 dB</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 2. REFLECTION ===== -->
+<section id="reflection" class="sec ref">
+<div class="wrap">
+  <div class="t-head">
+    <div class="badge">2</div>
+    <div><div class="t-name">Reflection <span class="t-ko">(반사)</span></div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h4>정의 (Definition)</h4>
+        <p>전파(波)가 자신의 파장보다 큰 매끄러운 물체에 부딪혔을 때, 매질에 따라 다른 방향으로 튕겨나가는 현상입니다.</p>
+        <p style="margin-top:8px"><strong>입사각 = 반사각</strong> (Law of Reflection: θᵢ = θᵣ)</p>
+      </div>
+      <div class="card">
+        <h4>두 가지 주요 반사 유형</h4>
+        <ul>
+          <li><strong>Sky Wave Reflection (전리층 반사):</strong><br>1 GHz 이하 주파수에서 발생. 전리층(Ionosphere) 하전 입자에 의해 신호가 반사됨. 장거리 통신에 활용 가능.</li>
+          <li style="margin-top:8px"><strong>Microwave Reflection (마이크로파 반사):</strong><br>Wi-Fi 환경에서 주로 관심 대상. 건물·도로·수면·금속 문·파일 캐비닛 등 평활한 표면에서 반사 발생.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>반사를 일으키는 재질</h4>
+        <ul>
+          <li>금속(Metal) → 반드시 반사 발생</li>
+          <li>유리(Glass), 콘크리트(Concrete) → 반사 가능</li>
+          <li>실내: 문(Door), 벽(Wall), 파일 캐비닛</li>
+          <li>실외: 건물, 도로, 수면(Bodies of water), 지표면</li>
+        </ul>
+        <div class="kp">🔀 <strong>반사(Reflection)는 다중경로(Multi-path) 현상의 주요 원인이 됩니다.</strong></div>
+      </div>
+    </div>
+    <div>
+      <div class="dc">
+        <div class="dc-title">반사 다이어그램 (Reflection Diagram)</div>
+        <div class="dc-body">
+          <svg width="100%" viewBox="0 0 420 310">
+            <rect width="420" height="310" fill="#f0f7ff" rx="6"/>
+            <defs>
+              <marker id="ab" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#1565c0"/></marker>
+              <marker id="ag" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto"><path d="M0,0L0,5L7,2.5z" fill="#374151"/></marker>
+            </defs>
+            <!-- Reflective surface -->
+            <rect x="282" y="35" width="22" height="240" fill="#64748b" rx="2"/>
+            <rect x="282" y="35" width="6" height="240" fill="#94a3b8" opacity=".6"/>
+            <text x="308" y="55" font-size="9.5" fill="#475569" transform="rotate(90 308 55)">Smooth Surface</text>
+            <!-- Incident ray (animated dashes) -->
+            <line x1="50" y1="75" x2="280" y2="158" stroke="#1565c0" stroke-width="2.8" marker-end="url(#ab)" stroke-dasharray="200" stroke-dashoffset="200"><animate attributeName="stroke-dashoffset" values="200;0;200" dur="2.5s" repeatCount="indefinite"/></line>
+            <!-- Reflected ray -->
+            <line x1="280" y1="158" x2="50" y2="245" stroke="#1565c0" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+            <!-- Normal line -->
+            <line x1="210" y1="158" x2="282" y2="158" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,3"/>
+            <!-- Angle arcs -->
+            <path d="M262,146 Q270,158 262,170" fill="none" stroke="#f59e0b" stroke-width="1.8"/>
+            <text x="242" y="143" font-size="10" fill="#f59e0b" font-weight="bold">θᵢ</text>
+            <text x="242" y="178" font-size="10" fill="#f59e0b" font-weight="bold">θᵣ</text>
+            <!-- TX marker -->
+            <circle cx="50" cy="75" r="16" fill="#dbeafe"/>
+            <text x="50" y="80" font-size="11" font-weight="bold" fill="#1d4ed8" text-anchor="middle">TX</text>
+            <!-- Incident/reflected labels -->
+            <text x="55" y="62" font-size="11" fill="#1565c0" font-weight="bold">Incident Ray</text>
+            <text x="55" y="262" font-size="11" fill="#1565c0" font-weight="bold" opacity=".7">Reflected Ray</text>
+            <!-- Law box -->
+            <rect x="88" y="272" width="200" height="26" rx="6" fill="#dbeafe"/>
+            <text x="188" y="289" font-size="11" fill="#1d4ed8" font-weight="bold" text-anchor="middle">θᵢ = θᵣ  (입사각 = 반사각)</text>
+            <!-- Sky wave mini illustration -->
+            <rect x="10" y="175" width="130" height="60" rx="6" fill="#e0f2fe" opacity=".7"/>
+            <ellipse cx="75" cy="195" rx="55" ry="20" fill="none" stroke="#7dd3fc" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <text x="75" y="190" font-size="8.5" fill="#0ea5e9" text-anchor="middle" font-style="italic">Ionosphere</text>
+            <path d="M22,220 Q46,185 75,190 Q104,195 128,220" stroke="#0ea5e9" stroke-width="1.5" fill="none" stroke-dasharray="3,3"/>
+            <text x="75" y="226" font-size="8.5" fill="#0ea5e9" text-anchor="middle">Sky Wave 반사 ↕</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 3. SCATTERING ===== -->
+<section id="scattering" class="sec sca">
+<div class="wrap">
+  <div class="t-head">
+    <div class="badge">3</div>
+    <div><div class="t-name">Scattering <span class="t-ko">(산란)</span></div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h4>정의 (Definition)</h4>
+        <p>전자기 신호(또는 입자)가 직선 경로에서 벗어나 여러 방향으로 흩어지는 현상. 파장이 반사 매질의 입자보다 <strong>클 때</strong> 발생합니다.</p>
+        <ul style="margin-top:10px">
+          <li>다중·확산 반사(Multiple / Diffuse Reflection)의 일종</li>
+          <li>cf) 경면반사(Specular Reflection): 하나의 방향으로만 반사</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>왜 하늘은 파란색인가? (Rayleigh Scattering)</h4>
+        <ul>
+          <li>대기 분자는 가시광 파장보다 훨씬 작음</li>
+          <li>파장이 짧은 <strong>파란색 빛</strong>이 모든 방향으로 강하게 산란 → 하늘이 파랗게 보임</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>RF 신호에서의 산란 원인</h4>
+        <ul>
+          <li>Chain link fences (철망 울타리)</li>
+          <li>Wire mesh in walls (벽의 철망)</li>
+          <li>Tree foliage (나뭇잎)</li>
+          <li>Rocky terrain (암석 지형)</li>
+        </ul>
+        <div class="kp">⚠️ 산란은 주 신호를 여러 방향으로 분산시켜 수신 신호 품질을 <strong>크게 저하</strong>시키거나 신호 손실을 유발합니다.</div>
+      </div>
+    </div>
+    <div>
+      <div class="dc">
+        <div class="dc-title">산란 다이어그램 (Scattering Diagram)</div>
+        <div class="dc-body">
+          <svg width="100%" viewBox="0 0 420 310">
+            <rect width="420" height="310" fill="#fff8f3" rx="6"/>
+            <defs>
+              <marker id="ao" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#d35400"/></marker>
+              <marker id="ab2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#1565c0"/></marker>
+            </defs>
+            <!-- Incident ray -->
+            <line x1="38" y1="95" x2="193" y2="175" stroke="#d35400" stroke-width="3" marker-end="url(#ao)"/>
+            <text x="28" y="88" font-size="10.5" fill="#d35400" font-weight="bold">Incident</text>
+            <!-- Rough surface (zigzag) -->
+            <path d="M178,162 L193,177 L208,162 L223,177 L238,162 L253,177 L268,162 L283,177 L298,162" stroke="#78716c" stroke-width="3" fill="none"/>
+            <path d="M178,177 L193,192 L208,177 L223,192 L238,177 L253,192 L268,177 L283,192 L298,177" stroke="#78716c" stroke-width="2.5" fill="none"/>
+            <text x="238" y="208" font-size="9.5" fill="#78716c" text-anchor="middle">Rough Surface</text>
+            <text x="238" y="220" font-size="9" fill="#92400e" text-anchor="middle">(Chain fence / Tree foliage)</text>
+            <!-- Scatter center -->
+            <circle cx="222" cy="172" r="9" fill="#fed7aa" stroke="#d35400" stroke-width="2" opacity=".85"/>
+            <circle cx="222" cy="172" r="3.5" fill="#d35400"/>
+            <!-- Scattered rays -->
+            <line x1="228" y1="164" x2="325" y2="88" stroke="#d35400" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ao)" opacity=".88"/>
+            <line x1="230" y1="168" x2="360" y2="162" stroke="#d35400" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ao)" opacity=".82"/>
+            <line x1="230" y1="175" x2="345" y2="262" stroke="#d35400" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ao)" opacity=".76"/>
+            <line x1="224" y1="163" x2="262" y2="68" stroke="#d35400" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ao)" opacity=".7"/>
+            <line x1="218" y1="163" x2="158" y2="78" stroke="#d35400" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#ao)" opacity=".6"/>
+            <line x1="216" y1="170" x2="112" y2="152" stroke="#d35400" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#ao)" opacity=".55"/>
+            <!-- Labels -->
+            <text x="328" y="83" font-size="9.5" fill="#d35400">↗ Scattered</text>
+            <text x="362" y="159" font-size="9.5" fill="#d35400">→ Scattered</text>
+            <text x="348" y="262" font-size="9.5" fill="#d35400">↘ Scattered</text>
+            <!-- Comparison specular vs diffuse -->
+            <rect x="10" y="248" width="158" height="52" rx="6" fill="#dbeafe" opacity=".8"/>
+            <text x="89" y="263" font-size="9" fill="#1d4ed8" font-weight="bold" text-anchor="middle">Specular (경면반사)</text>
+            <line x1="28" y1="282" x2="72" y2="270" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#ab2)"/>
+            <line x1="72" y1="270" x2="118" y2="282" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#ab2)"/>
+            <line x1="28" y1="288" x2="148" y2="288" stroke="#1d4ed8" stroke-width="1.2"/>
+            <text x="89" y="299" font-size="8.5" fill="#1d4ed8" text-anchor="middle">단일 반사 방향</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 4. REFRACTION ===== -->
+<section id="refraction" class="sec sec-alt rfr">
+<div class="wrap">
+  <div class="t-head">
+    <div class="badge">4</div>
+    <div><div class="t-name">Refraction <span class="t-ko">(굴절)</span></div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h4>정의 (Definition)</h4>
+        <p>RF 신호가 <strong>밀도가 다른 매질(medium)을 통과</strong>할 때 파의 방향이 변하는 현상. RF 굴절은 주로 대기 조건의 변화로 발생합니다.</p>
+      </div>
+      <div class="card">
+        <h4>k-factor (굴절 계수)</h4>
+        <p>장거리 야외 무선 브리지 링크를 다룰 때 굴절률 변화의 지표:</p>
+        <ul style="margin-top:8px">
+          <li><strong>k = 1:</strong> 굴절 없음 (직선 전파)</li>
+          <li><strong>k &lt; 1 (예: 2/3):</strong> 신호가 지구 반대 방향(위쪽)으로 굴절</li>
+          <li><strong>k &gt; 1:</strong> 신호가 지구 방향(아래쪽)으로 굴절</li>
+          <li><strong>k = 4/3 (≈1.33):</strong> 일반 대기 조건 — 지구 곡률을 따라 약간 아래로 굴절</li>
+        </ul>
+        <div class="kp" style="margin-top:10px">📻 장거리 야외 무선 브리지 링크(outdoor bridge link)에서 굴절은 중요한 설계 요소입니다.</div>
+      </div>
+      <div class="card">
+        <h4>굴절의 주요 원인 (Causes)</h4>
+        <ul>
+          <li>수증기 (Water vapor)</li>
+          <li>기온 변화 (Changes in air temperature)</li>
+          <li>기압 변화 (Changes in air pressure)</li>
+        </ul>
+        <div class="kp" style="margin-top:10px">🌡️ <strong>실외:</strong> RF 신호는 일반적으로 지구 표면 방향으로 약간 굴절됩니다. 대기 변화 시 지구 반대 방향으로 굴절될 수 있음. <br><strong>실내:</strong> 특정 유리 등 재료를 통과할 때도 굴절 발생.</div>
+      </div>
+    </div>
+    <div>
+      <div class="dc">
+        <div class="dc-title">굴절 다이어그램 (Refraction Diagram)</div>
+        <div class="dc-body">
+          <svg width="100%" viewBox="0 0 420 310">
+            <rect width="420" height="310" fill="#f0fdf5" rx="6"/>
+            <defs>
+              <marker id="ag2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#1b7c3a"/></marker>
+            </defs>
+            <!-- Medium layers -->
+            <rect x="0" y="0" width="420" height="130" fill="#bfdbfe" opacity=".5" rx="6 6 0 0"/>
+            <rect x="0" y="130" width="420" height="180" fill="#d1fae5" opacity=".55"/>
+            <text x="14" y="22" font-size="11" fill="#3b82f6" font-style="italic" font-weight="bold">Medium 1 — Low density (낮은 밀도)</text>
+            <text x="14" y="36" font-size="9.5" fill="#3b82f6">e.g., Cool air (차가운 공기)</text>
+            <text x="14" y="158" font-size="11" fill="#166534" font-style="italic" font-weight="bold">Medium 2 — High density (높은 밀도)</text>
+            <text x="14" y="172" font-size="9.5" fill="#166534">e.g., Warm air / Water vapor</text>
+            <!-- Interface -->
+            <line x1="0" y1="130" x2="420" y2="130" stroke="#6b7280" stroke-width="2" stroke-dasharray="7,4"/>
+            <text x="310" y="124" font-size="9.5" fill="#6b7280">▲ Interface</text>
+            <!-- Incident ray -->
+            <line x1="55" y1="18" x2="210" y2="130" stroke="#1b7c3a" stroke-width="2.8" marker-end="url(#ag2)"/>
+            <!-- Normal -->
+            <line x1="210" y1="65" x2="210" y2="205" stroke="#9ca3af" stroke-width="1.2" stroke-dasharray="4,3"/>
+            <text x="215" y="80" font-size="9" fill="#9ca3af">Normal</text>
+            <!-- Angle of incidence -->
+            <path d="M210,130 Q194,108 180,116" fill="none" stroke="#f59e0b" stroke-width="1.8"/>
+            <text x="164" y="112" font-size="10" fill="#f59e0b" font-weight="bold">θ₁</text>
+            <!-- Refracted ray -->
+            <line x1="210" y1="130" x2="375" y2="278" stroke="#1b7c3a" stroke-width="2.8" stroke-dasharray="8,4" marker-end="url(#ag2)"/>
+            <!-- Angle of refraction -->
+            <path d="M210,130 Q228,152 224,170" fill="none" stroke="#f59e0b" stroke-width="1.8"/>
+            <text x="230" y="168" font-size="10" fill="#f59e0b" font-weight="bold">θ₂</text>
+            <!-- Snell's law -->
+            <rect x="14" y="242" width="210" height="42" rx="6" fill="white" opacity=".9"/>
+            <text x="119" y="259" font-size="10" fill="#374151" font-weight="bold" text-anchor="middle">Snell's Law (스넬의 법칙)</text>
+            <text x="119" y="277" font-size="10" fill="#374151" text-anchor="middle">n₁ · sinθ₁ = n₂ · sinθ₂</text>
+            <!-- k-factor box -->
+            <rect x="248" y="242" width="158" height="58" rx="6" fill="#f0fdf4" stroke="#1b7c3a" stroke-width="1.2"/>
+            <text x="327" y="258" font-size="9.5" fill="#166534" font-weight="bold" text-anchor="middle">k-factor</text>
+            <text x="256" y="272" font-size="8.5" fill="#374151">k = 1 : 직선 전파</text>
+            <text x="256" y="284" font-size="8.5" fill="#374151">k &lt; 1 : 지구 반대 방향 굴절</text>
+            <text x="256" y="296" font-size="8.5" fill="#166534" font-weight="bold">k = 4/3 : 일반 대기 (↓ 아래로)</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 5. DIFFRACTION ===== -->
+<section id="diffraction" class="sec dif">
+<div class="wrap">
+  <div class="t-head">
+    <div class="badge">5</div>
+    <div><div class="t-name">Diffraction <span class="t-ko">(회절)</span></div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h4>정의 (Definition)</h4>
+        <p>RF 신호가 <strong>장애물을 만났을 때 구부러지고 퍼지는 현상</strong>. 장애물에 의한 <em>부분적 차단(partial blockage)</em>이 있을 때 발생합니다.</p>
+        <div class="kp">⚠️ <strong>Refraction(굴절)과의 차이:</strong><br>굴절은 신호가 다른 밀도의 매질을 <em>통과</em>할 때 발생.<br>회절은 신호가 장애물 <em>주변을 돌아갈</em> 때 발생.</div>
+      </div>
+      <div class="card">
+        <h4>강의 바위 비유 (River Rock Analogy)</h4>
+        <p>강에 바위가 있을 때:</p>
+        <ul style="margin-top:6px">
+          <li>대부분의 물은 원래 방향으로 계속 흐름</li>
+          <li>바위에 닿은 물의 일부는 반사(Reflection)</li>
+          <li>일부는 <strong>바위 주변을 돌아감 → 회절(Diffraction)</strong></li>
+        </ul>
+        <p style="margin-top:8px">마찬가지로, 건물이나 언덕이 TX와 RX 사이에 있으면, 신호의 일부는 장애물 주변을 돌아 더 긴 경로를 통해 수신됩니다.</p>
+      </div>
+      <div class="card">
+        <h4>RF Shadow (RF 음영 구역)</h4>
+        <p>장애물 바로 뒤에는 <strong>RF Shadow(음영 구역)</strong>가 형성됩니다:</p>
+        <ul style="margin-top:6px">
+          <li>완전한 <strong>Dead Zone(불감 지역)</strong>이 될 수 있음</li>
+          <li>또는 매우 약하게 감쇄된 신호를 수신 가능</li>
+        </ul>
+        <div class="kp">📡 회절된 신호는 더 긴 경로를 지남에 따라 추가적인 감쇄(Attenuation)와 위상 변화가 발생합니다.</div>
+      </div>
+    </div>
+    <div>
+      <div class="dc">
+        <div class="dc-title">회절 다이어그램 (Diffraction Diagram)</div>
+        <div class="dc-body">
+          <svg width="100%" viewBox="0 0 420 310">
+            <rect width="420" height="310" fill="#faf5ff" rx="6"/>
+            <defs>
+              <marker id="ap" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#6a0dad"/></marker>
+            </defs>
+            <!-- TX -->
+            <circle cx="44" cy="148" r="18" fill="#ede9fe"/>
+            <text x="44" y="153" font-size="11" font-weight="bold" fill="#5b21b6" text-anchor="middle">TX</text>
+            <!-- Building obstacle -->
+            <rect x="200" y="72" width="48" height="192" fill="#94a3b8" rx="3"/>
+            <rect x="200" y="72" width="48" height="192" fill="none" stroke="#64748b" stroke-width="1.5" rx="3"/>
+            <rect x="209" y="85" width="11" height="14" fill="#bae6fd" rx="1"/>
+            <rect x="228" y="85" width="11" height="14" fill="#bae6fd" rx="1"/>
+            <rect x="209" y="110" width="11" height="14" fill="#bae6fd" rx="1"/>
+            <rect x="228" y="110" width="11" height="14" fill="#bae6fd" rx="1"/>
+            <rect x="209" y="135" width="11" height="14" fill="#7dd3fc" rx="1"/>
+            <rect x="228" y="135" width="11" height="14" fill="#7dd3fc" rx="1"/>
+            <text x="224" y="278" font-size="9" fill="#475569" text-anchor="middle">Building</text>
+            <!-- RF Shadow zone -->
+            <rect x="248" y="72" width="168" height="192" fill="#fef3c7" opacity=".65" rx="0 4 4 0"/>
+            <text x="332" y="155" font-size="11.5" fill="#d97706" font-weight="bold" text-anchor="middle">RF Shadow</text>
+            <text x="332" y="170" font-size="10" fill="#d97706" text-anchor="middle">(음영 구역)</text>
+            <!-- Wave fronts approaching building -->
+            <line x1="80" y1="102" x2="198" y2="102" stroke="#6a0dad" stroke-width="1.8" opacity=".85"/>
+            <line x1="80" y1="122" x2="198" y2="122" stroke="#6a0dad" stroke-width="2.2" opacity=".9"/>
+            <line x1="80" y1="142" x2="198" y2="142" stroke="#6a0dad" stroke-width="2.5" opacity="1"/>
+            <line x1="80" y1="162" x2="198" y2="162" stroke="#6a0dad" stroke-width="2.2" opacity=".9"/>
+            <line x1="80" y1="182" x2="198" y2="182" stroke="#6a0dad" stroke-width="1.8" opacity=".85"/>
+            <line x1="80" y1="202" x2="198" y2="202" stroke="#6a0dad" stroke-width="1.5" opacity=".7"/>
+            <text x="125" y="93" font-size="9.5" fill="#6a0dad" font-style="italic">Original Path →</text>
+            <!-- Diffracted paths around top -->
+            <path d="M248,74 Q278,50 308,62 Q338,74 368,88" stroke="#6a0dad" stroke-width="2.2" fill="none" stroke-dasharray="8,4" marker-end="url(#ap)" opacity=".88"/>
+            <path d="M248,86 Q274,65 300,75 Q328,86 368,108" stroke="#6a0dad" stroke-width="1.6" fill="none" stroke-dasharray="8,4" opacity=".65"/>
+            <!-- Diffracted paths around bottom -->
+            <path d="M248,262 Q278,285 308,273 Q338,260 368,246" stroke="#6a0dad" stroke-width="2.2" fill="none" stroke-dasharray="8,4" marker-end="url(#ap)" opacity=".88"/>
+            <path d="M248,250 Q274,270 300,260 Q328,250 368,225" stroke="#6a0dad" stroke-width="1.6" fill="none" stroke-dasharray="8,4" opacity=".65"/>
+            <!-- Labels -->
+            <text x="370" y="83" font-size="9.5" fill="#6a0dad">Diffracted ↗</text>
+            <text x="370" y="243" font-size="9.5" fill="#6a0dad">Diffracted ↘</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 6. ATTENUATION ===== -->
+<section id="attenuation" class="sec sec-alt att">
+<div class="wrap">
+  <div class="t-head">
+    <div class="badge">6</div>
+    <div><div class="t-name">Loss / Attenuation <span class="t-ko">(감쇄)</span></div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h4>정의 (Definition)</h4>
+        <p>RF 신호가 전파되는 과정에서 <strong>신호 세기(전력)가 감소</strong>하는 현상. 거리가 증가할수록, 그리고 장애물을 통과할수록 신호는 약해집니다.</p>
+      </div>
+      <div class="card">
+        <h4>감쇄 유형 (Types)</h4>
+        <ul>
+          <li><strong>Free-Space Path Loss (자유 공간 경로 손실):</strong> 장애물 없이 거리만으로 발생하는 손실. 거리가 2배가 되면 −6 dB 감쇄.</li>
+          <li><strong>Material Absorption (재질 흡수):</strong> 벽, 바닥, 물체 통과 시 발생 (Absorption 참고)</li>
+          <li><strong>Atmospheric Absorption:</strong> 산소·수증기에 의한 흡수 (고주파에서 두드러짐)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Free-Space Path Loss 공식</h4>
+        <p style="font-family:monospace;font-size:0.95em;background:#e1f5fe;padding:10px;border-radius:6px;margin-top:8px">
+          FSPL(dB) = 20·log₁₀(d) + 20·log₁₀(f) + 20·log₁₀(4π/c)
+        </p>
+        <ul style="margin-top:10px">
+          <li><strong>d</strong> : 거리 (m)</li>
+          <li><strong>f</strong> : 주파수 (Hz)</li>
+          <li><strong>c</strong> : 빛의 속도 (3×10⁸ m/s)</li>
+        </ul>
+        <div class="kp" style="margin-top:10px">📉 주파수가 높을수록, 거리가 멀수록 감쇄가 큽니다. Absorption은 감쇄의 주요 원인 중 하나입니다.</div>
+      </div>
+    </div>
+    <div>
+      <div class="dc">
+        <div class="dc-title">감쇄 다이어그램 (Attenuation Diagram)</div>
+        <div class="dc-body">
+          <svg width="100%" viewBox="0 0 420 260">
+            <rect width="420" height="260" fill="#e1f5fe" rx="6"/>
+            <defs>
+              <marker id="at2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#0277bd"/></marker>
+            </defs>
+            <!-- TX -->
+            <line x1="40" y1="50" x2="40" y2="175" stroke="#555" stroke-width="3"/>
+            <line x1="26" y1="58" x2="54" y2="58" stroke="#555" stroke-width="2"/>
+            <line x1="28" y1="70" x2="52" y2="70" stroke="#555" stroke-width="2"/>
+            <line x1="31" y1="82" x2="49" y2="82" stroke="#555" stroke-width="2"/>
+            <text x="40" y="195" font-size="11" font-weight="bold" fill="#555" text-anchor="middle">TX</text>
+            <!-- RX -->
+            <line x1="385" y1="50" x2="385" y2="175" stroke="#555" stroke-width="3"/>
+            <line x1="372" y1="58" x2="398" y2="58" stroke="#555" stroke-width="2"/>
+            <line x1="374" y1="70" x2="396" y2="70" stroke="#555" stroke-width="2"/>
+            <text x="385" y="195" font-size="11" font-weight="bold" fill="#555" text-anchor="middle">RX</text>
+            <!-- Direct path tapering -->
+            <line x1="58" y1="118" x2="160" y2="118" stroke="#0277bd" stroke-width="5" opacity="1"/>
+            <line x1="160" y1="118" x2="260" y2="118" stroke="#0277bd" stroke-width="3" opacity=".65"/>
+            <line x1="260" y1="118" x2="360" y2="118" stroke="#0277bd" stroke-width="1.5" opacity=".35" marker-end="url(#at2)"/>
+            <!-- Wave amplitude at TX end (big) -->
+            <path d="M72,88 Q82,68 92,88 Q102,108 112,88 Q122,68 132,88" stroke="#0277bd" stroke-width="2.5" fill="none" opacity=".9"><animate attributeName="opacity" values=".9;.3;.9" dur="1.8s" repeatCount="indefinite"/></path>
+            <!-- Wave amplitude mid (medium) -->
+            <path d="M188,100 Q196,88 204,100 Q212,112 220,100 Q228,88 236,100" stroke="#0277bd" stroke-width="1.8" fill="none" opacity=".6"><animate attributeName="opacity" values=".6;.2;.6" dur="1.8s" begin=".3s" repeatCount="indefinite"/></path>
+            <!-- Wave amplitude at RX end (small) -->
+            <path d="M290,111 Q296,104 302,111 Q308,118 314,111 Q320,104 326,111" stroke="#0277bd" stroke-width="1" fill="none" opacity=".3"><animate attributeName="opacity" values=".3;.1;.3" dur="1.8s" begin=".6s" repeatCount="indefinite"/></path>
+            <!-- Labels -->
+            <text x="100" y="143" font-size="10" fill="#0277bd" font-weight="bold" text-anchor="middle">Strong</text>
+            <text x="210" y="143" font-size="10" fill="#0277bd" text-anchor="middle">Medium</text>
+            <text x="308" y="143" font-size="10" fill="#0277bd" opacity=".6" text-anchor="middle">Weak</text>
+            <!-- Distance markers -->
+            <line x1="58" y1="168" x2="368" y2="168" stroke="#0288d1" stroke-width="1.5" marker-end="url(#at2)"/>
+            <text x="213" y="184" font-size="10" fill="#0277bd" text-anchor="middle">Distance (거리) →</text>
+            <!-- Inverse square law note -->
+            <rect x="50" y="210" width="320" height="30" rx="6" fill="white" opacity=".85"/>
+            <text x="210" y="228" font-size="10" fill="#374151" text-anchor="middle">거리 2배 → 자유공간 손실 −6 dB (전력 1/4 감소)</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 7. MULTIPATH ===== -->
+<section id="multipath" class="sec mlt">
+<div class="wrap">
+  <div class="t-head">
+    <div class="badge">7</div>
+    <div><div class="t-name">Multipath <span class="t-ko">(다중경로)</span></div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h4>정의 (Definition)</h4>
+        <p>RF 신호가 <strong>TX에서 RX까지 하나 이상의 경로</strong>를 통해 도달하는 현상. 주로 반사(Reflection)와 회절(Diffraction)에 의해 발생합니다.</p>
+      </div>
+      <div class="card">
+        <h4>다중경로의 원인</h4>
+        <ul>
+          <li>건물·벽·지면 등에서의 <strong>반사(Reflection)</strong></li>
+          <li>장애물 주변의 <strong>회절(Diffraction)</strong></li>
+          <li>나뭇잎·철망 등에서의 <strong>산란(Scattering)</strong></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>다중경로의 영향</h4>
+        <ul>
+          <li><strong>Multipath Fading:</strong> 여러 경로의 신호가 수신기에서 위상 차이를 갖고 더해져 신호가 강해지거나(보강 간섭) 약해짐(상쇄 간섭)</li>
+          <li><strong>ISI (Inter-Symbol Interference):</strong> 경로 길이 차이로 인한 시간 지연 → 심벌 간 간섭 발생</li>
+          <li><strong>Delay Spread:</strong> 가장 빠른 경로와 늦은 경로 간의 시간 차이</li>
+        </ul>
+        <div class="kp">📡 <strong>Wi-Fi (802.11n/ac/ax)</strong>는 MIMO 기술로 다중경로를 오히려 활용하여 전송 속도를 높입니다 (Spatial Multiplexing).</div>
+        <div class="kp" style="margin-top:8px">⚠️ <strong>OFDM</strong>은 Guard Interval(보호 구간)을 사용하여 다중경로로 인한 ISI를 방지합니다.</div>
+      </div>
+    </div>
+    <div>
+      <div class="dc">
+        <div class="dc-title">다중경로 다이어그램 (Multipath Diagram)</div>
+        <div class="dc-body">
+          <svg width="100%" viewBox="0 0 420 310">
+            <rect width="420" height="310" fill="#e0f2f1" rx="6"/>
+            <defs>
+              <marker id="aml" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#00695c"/></marker>
+              <marker id="aml2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#00897b"/></marker>
+              <marker id="aml3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0L0,6L8,3z" fill="#26a69a"/></marker>
+            </defs>
+            <!-- Ground -->
+            <rect x="0" y="250" width="420" height="60" fill="#a5d6a7" opacity=".7" rx="0 0 6 6"/>
+            <line x1="0" y1="250" x2="420" y2="250" stroke="#66bb6a" stroke-width="1.5"/>
+            <!-- Building -->
+            <rect x="188" y="130" width="52" height="120" fill="#94a3b8" rx="3"/>
+            <rect x="198" y="142" width="10" height="13" fill="#bae6fd" rx="1"/>
+            <rect x="218" y="142" width="10" height="13" fill="#bae6fd" rx="1"/>
+            <rect x="198" y="165" width="10" height="13" fill="#7dd3fc" rx="1"/>
+            <rect x="218" y="165" width="10" height="13" fill="#7dd3fc" rx="1"/>
+            <!-- TX -->
+            <line x1="44" y1="250" x2="44" y2="155" stroke="#555" stroke-width="4"/>
+            <line x1="32" y1="163" x2="56" y2="163" stroke="#555" stroke-width="2.5"/>
+            <line x1="35" y1="174" x2="53" y2="174" stroke="#555" stroke-width="2.5"/>
+            <line x1="44" y1="155" x2="44" y2="130" stroke="#006064" stroke-width="3.5"/>
+            <circle cx="44" cy="126" r="6" fill="#006064"/>
+            <text x="44" y="266" font-size="11" font-weight="bold" fill="#555" text-anchor="middle">TX</text>
+            <!-- RX -->
+            <line x1="380" y1="250" x2="380" y2="168" stroke="#555" stroke-width="4"/>
+            <line x1="368" y1="176" x2="392" y2="176" stroke="#555" stroke-width="2.5"/>
+            <line x1="371" y1="186" x2="389" y2="186" stroke="#555" stroke-width="2.5"/>
+            <line x1="380" y1="168" x2="380" y2="145" stroke="#00695c" stroke-width="3.5"/>
+            <circle cx="380" cy="141" r="6" fill="#00695c"/>
+            <text x="380" y="266" font-size="11" font-weight="bold" fill="#555" text-anchor="middle">RX</text>
+            <!-- Path 1: Direct -->
+            <line x1="58" y1="168" x2="185" y2="168" stroke="#00695c" stroke-width="2.5" marker-end="url(#aml)"/>
+            <line x1="242" y1="168" x2="368" y2="168" stroke="#00695c" stroke-width="2.5" stroke-dasharray="6,3" marker-end="url(#aml)"/>
+            <text x="115" y="160" font-size="9.5" fill="#00695c" font-weight="bold">① Direct Path (직접파)</text>
+            <!-- Path 2: Ground reflection -->
+            <path d="M58,185 Q215,288 368,190" stroke="#00897b" stroke-width="2" fill="none" stroke-dasharray="7,4" marker-end="url(#aml2)"/>
+            <text x="195" y="297" font-size="9.5" fill="#00897b" font-weight="bold" text-anchor="middle">② Ground Reflection (지면 반사)</text>
+            <!-- Path 3: Building reflection -->
+            <line x1="58" y1="158" x2="185" y2="145" stroke="#26a69a" stroke-width="2" stroke-dasharray="7,4" marker-end="url(#aml3)"/>
+            <line x1="242" y1="142" x2="370" y2="158" stroke="#26a69a" stroke-width="2" stroke-dasharray="7,4" marker-end="url(#aml3)"/>
+            <text x="215" y="122" font-size="9.5" fill="#26a69a" font-weight="bold" text-anchor="middle">③ Building Reflection (건물 반사)</text>
+            <!-- Fading note -->
+            <rect x="280" y="200" width="132" height="44" rx="6" fill="white" opacity=".88"/>
+            <text x="346" y="216" font-size="9.5" fill="#00695c" font-weight="bold" text-anchor="middle">결과 (Effects)</text>
+            <text x="346" y="230" font-size="8.5" fill="#374151" text-anchor="middle">Multipath Fading</text>
+            <text x="346" y="242" font-size="8.5" fill="#374151" text-anchor="middle">ISI, Delay Spread</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Summary Table -->
+<section class="sec sec-alt" style="padding-bottom:20px">
+<div class="wrap">
+  <h2 class="ov-title" style="margin-bottom:22px">요약 비교표 (Summary Comparison)</h2>
+  <div style="background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:.88em">
+      <thead>
+        <tr style="background:#1565c0;color:white">
+          <th style="padding:12px 16px;text-align:left">현상</th>
+          <th style="padding:12px 16px;text-align:left">설명</th>
+          <th style="padding:12px 16px;text-align:left">발생 조건</th>
+          <th style="padding:12px 16px;text-align:left">주요 원인 재질/환경</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:10px 16px;font-weight:700;color:#c0392b">① Absorption (흡수)</td><td style="padding:10px 16px">매질에 의한 에너지 흡수</td><td style="padding:10px 16px">신호가 물질을 통과할 때</td><td style="padding:10px 16px">콘크리트, 물, 인체</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0;background:#fafafa"><td style="padding:10px 16px;font-weight:700;color:#1565c0">② Reflection (반사)</td><td style="padding:10px 16px">매끄러운 표면에서 방향 전환</td><td style="padding:10px 16px">파장 &lt; 물체 크기</td><td style="padding:10px 16px">금속, 유리, 콘크리트</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:10px 16px;font-weight:700;color:#d35400">③ Scattering (산란)</td><td style="padding:10px 16px">울퉁불퉁한 표면에서 다방향 확산</td><td style="padding:10px 16px">파장 &gt; 매질 입자 크기</td><td style="padding:10px 16px">철망, 나뭇잎, 암석</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0;background:#fafafa"><td style="padding:10px 16px;font-weight:700;color:#1b7c3a">④ Refraction (굴절)</td><td style="padding:10px 16px">밀도가 다른 매질 통과 시 방향 변화</td><td style="padding:10px 16px">서로 다른 밀도의 매질 경계</td><td style="padding:10px 16px">대기층 변화, 수증기, 기온</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:10px 16px;font-weight:700;color:#6a0dad">⑤ Diffraction (회절)</td><td style="padding:10px 16px">장애물 가장자리에서 신호 회절</td><td style="padding:10px 16px">장애물의 부분적 차단 시</td><td style="padding:10px 16px">건물, 언덕, 지형</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0;background:#fafafa"><td style="padding:10px 16px;font-weight:700;color:#0277bd">⑥ Attenuation (감쇄)</td><td style="padding:10px 16px">거리·장애물에 의한 신호 감쇄</td><td style="padding:10px 16px">전파 경로 전반에 걸쳐</td><td style="padding:10px 16px">거리, 흡수, 산란, 반사</td></tr>
+        <tr><td style="padding:10px 16px;font-weight:700;color:#00695c">⑦ Multipath (다중경로)</td><td style="padding:10px 16px">TX→RX 간 복수 경로 존재</td><td style="padding:10px 16px">반사·회절·산란 복합 환경</td><td style="padding:10px 16px">건물 밀집 도심, 실내 환경</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<footer>
+  <p>RF Wave Propagation Characteristics &nbsp;|&nbsp; 데이터통신 강의자료 &nbsp;|&nbsp; Pusan National University</p>
+</footer>
+
+</body>
+</html>
