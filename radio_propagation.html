@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>전파 전파(Propagation) 방식</title>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f0f2f9;--border:#dde1ee;
+  --tp:#1a1d2e;--ts:#5a6080;--tm:#9aa0bf;
+  --ground:#e67700;--ground-l:#fff8e1;--ground-b:#ffd43b;
+  --sky:#1971c2;--sky-l:#e7f5ff;--sky-b:#74c0fc;
+  --los:#2f9e44;--los-l:#ebfbee;--los-b:#69db7c;
+  --space:#6741d9;--space-l:#f3f0ff;--space-b:#b197fc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;line-height:1.65}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#1a1d2e,#2d3561);color:#fff;padding:52px 24px 44px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(103,65,217,.3),transparent)}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);font-size:11px;font-weight:700;letter-spacing:.1em;padding:4px 14px;border-radius:20px;margin-bottom:14px;position:relative}
+.hero h1{font-size:clamp(22px,4vw,38px);font-weight:900;position:relative}
+.hero p{margin-top:10px;font-size:14px;color:rgba(255,255,255,.72);position:relative}
+
+/* Nav pills */
+.nav-pills{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:20px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-pill{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;border:2px solid transparent;cursor:pointer;text-decoration:none;transition:all .2s}
+.np-ground{background:var(--ground-l);color:var(--ground);border-color:var(--ground-b)}
+.np-ground:hover{background:var(--ground);color:#fff}
+.np-sky{background:var(--sky-l);color:var(--sky);border-color:var(--sky-b)}
+.np-sky:hover{background:var(--sky);color:#fff}
+.np-los{background:var(--los-l);color:var(--los);border-color:var(--los-b)}
+.np-los:hover{background:var(--los);color:#fff}
+.np-space{background:var(--space-l);color:var(--space);border-color:var(--space-b)}
+.np-space:hover{background:var(--space);color:#fff}
+
+/* Container */
+.container{max-width:1060px;margin:0 auto;padding:40px 18px 90px}
+
+/* Section */
+.section{margin-bottom:72px}
+.sec-anchor{position:relative;top:-80px}
+
+/* Section header */
+.sec-head{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.sec-num{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.sec-head-text .sec-en{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.sec-head-text .sec-kr{font-size:22px;font-weight:900}
+.sec-head-text .sec-sub{font-size:13px;color:var(--ts);margin-top:2px}
+
+/* two-col layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:740px){.two-col{grid-template-columns:1fr}}
+
+/* SVG diagram card */
+.diagram-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.diagram-card svg{display:block;width:100%}
+
+/* Info card */
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px}
+.info-section{margin-bottom:18px}
+.info-section:last-child{margin-bottom:0}
+.info-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.feature-list{list-style:none}
+.feature-list li{display:flex;gap:8px;font-size:13px;color:var(--ts);margin-bottom:6px;align-items:flex-start}
+.feature-list li::before{content:'›';font-weight:900;flex-shrink:0;margin-top:1px}
+.freq-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:4px}
+.use-tags{display:flex;flex-wrap:wrap;gap:6px}
+.use-tag{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+
+/* Colors per mode */
+.ground .sec-num{background:var(--ground-l)}
+.ground .sec-en{color:var(--ground)}
+.ground .sec-kr{color:var(--ground)}
+.ground .info-label{color:var(--ground)}
+.ground .feature-list li::before{color:var(--ground)}
+.ground .freq-badge{background:var(--ground-l);color:var(--ground);border:1px solid var(--ground-b)}
+.ground .use-tag{background:var(--ground-l);color:var(--ground)}
+
+.sky .sec-num{background:var(--sky-l)}
+.sky .sec-en{color:var(--sky)}
+.sky .sec-kr{color:var(--sky)}
+.sky .info-label{color:var(--sky)}
+.sky .feature-list li::before{color:var(--sky)}
+.sky .freq-badge{background:var(--sky-l);color:var(--sky);border:1px solid var(--sky-b)}
+.sky .use-tag{background:var(--sky-l);color:var(--sky)}
+
+.los .sec-num{background:var(--los-l)}
+.los .sec-en{color:var(--los)}
+.los .sec-kr{color:var(--los)}
+.los .info-label{color:var(--los)}
+.los .feature-list li::before{color:var(--los)}
+.los .freq-badge{background:var(--los-l);color:var(--los);border:1px solid var(--los-b)}
+.los .use-tag{background:var(--los-l);color:var(--los)}
+
+.space .sec-num{background:var(--space-l)}
+.space .sec-en{color:var(--space)}
+.space .sec-kr{color:var(--space)}
+.space .info-label{color:var(--space)}
+.space .feature-list li::before{color:var(--space)}
+.space .freq-badge{background:var(--space-l);color:var(--space);border:1px solid var(--space-b)}
+.space .use-tag{background:var(--space-l);color:var(--space)}
+
+/* Summary table */
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:28px}
+.summary-title{background:#1a1d2e;color:#fff;padding:14px 20px;font-size:14px;font-weight:700}
+.summary-table{width:100%;border-collapse:collapse}
+.summary-table th{background:var(--surface2);color:var(--ts);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:11px 16px;text-align:left;border-bottom:1px solid var(--border)}
+.summary-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.summary-table tr:last-child td{border-bottom:none}
+.summary-table tr:hover td{background:rgba(103,65,217,.03)}
+.mode-badge{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12px;padding:3px 10px;border-radius:8px}
+.mb-ground{background:var(--ground-l);color:var(--ground)}
+.mb-sky{background:var(--sky-l);color:var(--sky)}
+.mb-los{background:var(--los-l);color:var(--los)}
+.mb-space{background:var(--space-l);color:var(--space)}
+
+/* Frequency spectrum bar */
+.spectrum-bar{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:0}
+.spectrum-title{font-size:14px;font-weight:700;margin-bottom:18px}
+.freq-axis{display:flex;align-items:stretch;height:70px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.freq-seg{display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:10px;font-weight:700;padding:4px;text-align:center;border-right:1px solid rgba(255,255,255,.3)}
+.freq-seg:last-child{border-right:none}
+.fs-vlf{background:#e9ecef;color:#495057;flex:1}
+.fs-lf{background:#fff3bf;color:#856404;flex:1}
+.fs-mf{background:#ffe8cc;color:#ae3a00;flex:2}
+.fs-hf{background:#d0ebff;color:#1864ab;flex:2}
+.fs-vhf{background:#d3f9d8;color:#1a4731;flex:2}
+.fs-uhf{background:#e5dbff;color:#4c1d95;flex:3}
+.fs-shf{background:#fde2f3;color:#831843;flex:4}
+.freq-labels{display:flex;padding:6px 0;font-size:9px;color:var(--tm)}
+.freq-label-seg{text-align:center}
+.fl-vlf{flex:1}
+.fl-lf{flex:1}
+.fl-mf{flex:2}
+.fl-hf{flex:2}
+.fl-vhf{flex:2}
+.fl-uhf{flex:3}
+.fl-shf{flex:4}
+.prop-indicator{margin-top:8px;display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pi-block{height:8px;border-radius:4px;flex:1;min-width:20px}
+
+/* Animations */
+@keyframes wave-ground{
+  0%{stroke-dashoffset:200}100%{stroke-dashoffset:0}
+}
+@keyframes wave-sky{
+  0%{stroke-dashoffset:300}100%{stroke-dashoffset:0}
+}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes float-up{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:0}50%{opacity:1}}
+@keyframes dash-flow{0%{stroke-dashoffset:100}100%{stroke-dashoffset:0}}
+
+.anim-ground path.wave{
+  stroke-dasharray:12 6;
+  animation:wave-ground 2s linear infinite;
+}
+.anim-sky path.wave{
+  stroke-dasharray:10 5;
+  animation:wave-sky 2.5s linear infinite;
+}
+.anim-los path.wave{
+  stroke-dasharray:8 4;
+  animation:dash-flow 1.5s linear infinite;
+}
+.anim-space path.wave{
+  stroke-dasharray:10 5;
+  animation:dash-flow 2s linear infinite;
+}
+.sat-float{animation:float-up 3s ease-in-out infinite}
+.ionosphere-pulse{animation:pulse 3s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">RADIO WAVE PROPAGATION</div>
+  <h1>전파(電波) 전파 방식</h1>
+  <p>Ground Wave · Sky Wave · Line-of-Sight · Space Wave — 주파수별 전파 특성과 활용</p>
+</div>
+
+<div class="nav-pills">
+  <a class="nav-pill np-ground" href="#ground">🌍 Ground Wave</a>
+  <a class="nav-pill np-sky" href="#sky">☁️ Sky Wave</a>
+  <a class="nav-pill np-los" href="#los">📡 Line-of-Sight</a>
+  <a class="nav-pill np-space" href="#space">🛰️ Space Wave</a>
+  <a class="nav-pill" style="background:#f1f3f5;color:var(--ts);border-color:var(--border)" href="#summary">📊 비교 요약</a>
+</div>
+
+<div class="container">
+
+<!-- ══════════════ GROUND WAVE ══════════════ -->
+<div class="section ground" id="ground">
+  <div class="sec-anchor"></div>
+  <div class="sec-head">
+    <div class="sec-num">🌍</div>
+    <div class="sec-head-text">
+      <div class="sec-en">Ground Wave · 1</div>
+      <div class="sec-kr">지표파 전파</div>
+      <div class="sec-sub">전파가 지구 표면을 따라 굽어서 진행하는 방식</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- Diagram -->
+    <div class="diagram-card">
+      <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" class="anim-ground">
+        <!-- Sky background -->
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e8f4fd"/>
+            <stop offset="100%" stop-color="#f0f8ff"/>
+          </linearGradient>
+          <linearGradient id="earthGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6db56d"/>
+            <stop offset="40%" stop-color="#5a9e5a"/>
+            <stop offset="100%" stop-color="#4a8a4a"/>
+          </linearGradient>
+          <clipPath id="earthClip">
+            <ellipse cx="240" cy="340" rx="420" ry="200"/>
+          </clipPath>
+        </defs>
+        <rect width="480" height="260" fill="url(#skyGrad)"/>
+
+        <!-- Earth surface -->
+        <ellipse cx="240" cy="340" rx="420" ry="200" fill="url(#earthGrad)"/>
+
+        <!-- Earth surface detail lines -->
+        <ellipse cx="240" cy="340" rx="420" ry="200" fill="none" stroke="#4a8a4a" stroke-width="1" opacity="0.4"/>
+
+        <!-- Transmitter tower (left) -->
+        <line x1="80" y1="148" x2="80" y2="175" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <polygon points="80,120 74,148 86,148" fill="#e03131"/>
+        <rect x="74" y="175" width="12" height="8" rx="2" fill="#555"/>
+        <!-- Antenna signals -->
+        <path d="M80,130 Q68,122 60,112" stroke="#e03131" stroke-width="1.5" fill="none" opacity="0.6"/>
+        <path d="M80,130 Q92,122 100,112" stroke="#e03131" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+        <!-- Receiver tower (right) -->
+        <line x1="390" y1="138" x2="390" y2="163" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <polygon points="390,110 384,138 396,138" fill="#1971c2"/>
+        <rect x="384" y="163" width="12" height="8" rx="2" fill="#555"/>
+
+        <!-- Ground wave path (follows earth curvature) -->
+        <path class="wave" d="M85,162 Q140,148 180,143 Q220,138 260,138 Q300,140 340,143 Q365,147 385,150"
+              fill="none" stroke="#e67700" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- Diffraction indication (small bump path) -->
+        <path d="M180,143 Q190,130 200,126 Q210,130 220,138"
+              fill="none" stroke="#e67700" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+        <!-- Obstacle (building) -->
+        <rect x="188" y="126" width="18" height="20" rx="2" fill="#888" opacity="0.7"/>
+        <rect x="193" y="122" width="8" height="6" rx="1" fill="#aaa" opacity="0.7"/>
+
+        <!-- Diffraction label -->
+        <text x="205" y="118" font-size="9" fill="#888" font-family="sans-serif">회절</text>
+        <text x="195" y="108" font-size="8" fill="#aaa" font-family="sans-serif">(Diffraction)</text>
+
+        <!-- Wave animation dots -->
+        <circle cx="130" cy="152" r="3" fill="#e67700" opacity="0.8"/>
+        <circle cx="220" cy="140" r="3" fill="#e67700" opacity="0.6"/>
+        <circle cx="310" cy="141" r="3" fill="#e67700" opacity="0.5"/>
+
+        <!-- Labels -->
+        <text x="70" y="106" font-size="11" fill="#e03131" font-weight="bold" font-family="sans-serif">TX</text>
+        <text x="382" y="96" font-size="11" fill="#1971c2" font-weight="bold" font-family="sans-serif">RX</text>
+        <text x="190" y="165" font-size="10" fill="#e67700" font-weight="bold" font-family="sans-serif">Ground Wave</text>
+        <text x="175" y="178" font-size="9" fill="#888" font-family="sans-serif">지구 곡면을 따라 전파</text>
+
+        <!-- Freq label -->
+        <rect x="8" y="8" width="90" height="22" rx="6" fill="#fff3bf" opacity="0.9"/>
+        <text x="13" y="23" font-size="10" fill="#e67700" font-weight="bold" font-family="sans-serif">LF / MF (0.03–3 MHz)</text>
+      </svg>
+    </div>
+
+    <!-- Info -->
+    <div class="info-card">
+      <div class="info-section">
+        <div class="info-label">📡 전파 특성</div>
+        <ul class="feature-list">
+          <li>전파가 <strong>지구 곡면을 따라</strong> 이동하며 원거리 도달</li>
+          <li><strong>회절(Diffraction)</strong> 효과로 산·건물 등 장애물 우회 가능</li>
+          <li>낮은 주파수일수록 회절 효과가 강해 더 멀리 전파</li>
+          <li>지면의 전기적 특성(도전율)에 영향을 받음 — 바다 위가 유리</li>
+          <li>주·야간 특성 변화가 거의 없어 안정적</li>
+        </ul>
+      </div>
+      <div class="info-section">
+        <div class="info-label">📶 주파수 대역</div>
+        <div class="freq-badge" style="background:var(--ground-l);color:var(--ground);border:1px solid var(--ground-b)">
+          LF (30–300 kHz) &nbsp;·&nbsp; MF (300 kHz – 3 MHz)
+        </div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">🎯 주요 활용</div>
+        <div class="use-tags">
+          <span class="use-tag">AM 방송 (중파)</span>
+          <span class="use-tag">해상 통신</span>
+          <span class="use-tag">항법 (LORAN)</span>
+          <span class="use-tag">장거리 저속 통신</span>
+          <span class="use-tag">표준 시보</span>
+        </div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">✅ 장점 / ⚠️ 한계</div>
+        <ul class="feature-list">
+          <li>✅ 장애물 극복, 수백~수천 km 전파</li>
+          <li>✅ 안정적·지속적인 통신 가능</li>
+          <li>⚠️ 주파수가 낮아 대역폭 협소 → 저속 데이터만 가능</li>
+          <li>⚠️ 대형 송신 안테나 필요 (파장이 길기 때문)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SKY WAVE ══════════════ -->
+<div class="section sky" id="sky">
+  <div class="sec-anchor"></div>
+  <div class="sec-head">
+    <div class="sec-num">☁️</div>
+    <div class="sec-head-text">
+      <div class="sec-en">Sky Wave · 2</div>
+      <div class="sec-kr">전리층 반사 전파</div>
+      <div class="sec-sub">전파가 전리층(Ionosphere)에서 반사·굴절되어 장거리 도달</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="diagram-card">
+      <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg" class="anim-sky">
+        <defs>
+          <linearGradient id="skyGrad2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0a1628"/>
+            <stop offset="35%" stop-color="#1a3060"/>
+            <stop offset="70%" stop-color="#c8e6ff"/>
+            <stop offset="100%" stop-color="#e8f4ff"/>
+          </linearGradient>
+          <linearGradient id="earthGrad2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6db56d"/>
+            <stop offset="100%" stop-color="#4a8a4a"/>
+          </linearGradient>
+          <linearGradient id="ionoGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(255,200,50,0)" />
+            <stop offset="40%" stop-color="rgba(255,200,50,0.25)"/>
+            <stop offset="100%" stop-color="rgba(255,200,50,0)"/>
+          </linearGradient>
+        </defs>
+        <rect width="480" height="280" fill="url(#skyGrad2)"/>
+
+        <!-- Stars -->
+        <circle cx="30" cy="15" r="1" fill="white" opacity="0.8"/>
+        <circle cx="80" cy="8" r="1" fill="white" opacity="0.6"/>
+        <circle cx="140" cy="20" r="1.2" fill="white" opacity="0.7"/>
+        <circle cx="220" cy="5" r="1" fill="white" opacity="0.8"/>
+        <circle cx="300" cy="18" r="1" fill="white" opacity="0.5"/>
+        <circle cx="380" cy="10" r="1.2" fill="white" opacity="0.7"/>
+        <circle cx="440" cy="22" r="1" fill="white" opacity="0.6"/>
+        <circle cx="460" cy="8" r="1" fill="white" opacity="0.8"/>
+
+        <!-- Ionosphere layers -->
+        <rect x="0" y="48" width="480" height="44" fill="url(#ionoGrad)" class="ionosphere-pulse"/>
+        <path d="M0,52 Q80,42 160,55 Q240,68 320,50 Q400,35 480,55" fill="none" stroke="rgba(255,200,50,0.6)" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <path d="M0,88 Q80,78 160,91 Q240,104 320,86 Q400,72 480,91" fill="none" stroke="rgba(255,200,50,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="8" y="68" font-size="9" fill="rgba(255,200,150,0.9)" font-family="sans-serif" font-weight="bold">Ionosphere (전리층  F층)</text>
+
+        <!-- Earth surface -->
+        <ellipse cx="240" cy="380" rx="450" ry="240" fill="url(#earthGrad2)"/>
+        <ellipse cx="240" cy="380" rx="450" ry="240" fill="none" stroke="#5a9e5a" stroke-width="1" opacity="0.4"/>
+
+        <!-- TX tower -->
+        <line x1="72" y1="156" x2="72" y2="180" stroke="#bbb" stroke-width="2.5"/>
+        <polygon points="72,130 66,156 78,156" fill="#e67700"/>
+        <rect x="66" y="180" width="12" height="7" rx="2" fill="#888"/>
+
+        <!-- RX1 tower (far right, after 1 hop) -->
+        <line x1="395" y1="150" x2="395" y2="174" stroke="#bbb" stroke-width="2.5"/>
+        <polygon points="395,124 389,150 401,150" fill="#1971c2"/>
+        <rect x="389" y="174" width="12" height="7" rx="2" fill="#888"/>
+
+        <!-- Sky Wave path: up then reflect then down — single hop -->
+        <path class="wave" d="M77,148 Q150,40 240,55 Q330,40 390,140"
+              fill="none" stroke="#1971c2" stroke-width="2.5" stroke-linecap="round"/>
+
+        <!-- Reflection point indicator -->
+        <circle cx="240" cy="55" r="6" fill="rgba(255,200,50,0.8)" stroke="#f59f00" stroke-width="1.5"/>
+        <text x="248" y="52" font-size="9" fill="#f59f00" font-family="sans-serif" font-weight="bold">반사점</text>
+
+        <!-- 2nd hop (dotted) -->
+        <path d="M390,148 Q420,80 460,55" fill="none" stroke="#1971c2" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.5"/>
+        <text x="408" y="105" font-size="8" fill="#74c0fc" font-family="sans-serif">2nd hop</text>
+
+        <!-- Angle arrows -->
+        <line x1="180" y1="92" x2="200" y2="72" stroke="#f59f00" stroke-width="1" opacity="0.7"/>
+        <line x1="200" y1="72" x2="210" y2="55" stroke="#f59f00" stroke-width="1" opacity="0.7"/>
+
+        <!-- Labels -->
+        <text x="60" y="118" font-size="10" fill="#e67700" font-weight="bold" font-family="sans-serif">TX</text>
+        <text x="387" y="112" font-size="10" fill="#74c0fc" font-weight="bold" font-family="sans-serif">RX</text>
+
+        <!-- Distance indicator -->
+        <line x1="72" y1="200" x2="395" y2="200" stroke="#aaa" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="200" y="213" font-size="9" fill="#aaa" font-family="sans-serif">수천 km 전파 가능 (multi-hop)</text>
+
+        <!-- Freq label -->
+        <rect x="8" y="8" width="80" height="20" rx="5" fill="rgba(255,255,255,0.15)"/>
+        <text x="13" y="22" font-size="10" fill="#74c0fc" font-weight="bold" font-family="sans-serif">HF (3–30 MHz)</text>
+      </svg>
+    </div>
+
+    <div class="info-card">
+      <div class="info-section">
+        <div class="info-label">📡 전파 특성</div>
+        <ul class="feature-list">
+          <li>전파가 대기 상층의 <strong>전리층(Ionosphere)</strong>에 의해 반사·굴절</li>
+          <li>지표에서 반사 → 전리층에서 재반사 → <strong>Multi-hop</strong>으로 수천 km 도달</li>
+          <li>태양 활동에 따라 전리층 높이·밀도가 변화 → 주야간 특성 차이</li>
+          <li>주파수가 높을수록 전리층을 뚫고 나감 → <strong>최대 사용 주파수(MUF)</strong> 존재</li>
+          <li>Skip Zone (불감대) 발생 — 특정 거리 구간에서 수신 불가</li>
+        </ul>
+      </div>
+      <div class="info-section">
+        <div class="info-label">📶 주파수 대역</div>
+        <div class="freq-badge">HF (3 MHz – 30 MHz)</div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">🎯 주요 활용</div>
+        <div class="use-tags">
+          <span class="use-tag">단파 방송 (Shortwave)</span>
+          <span class="use-tag">군/항공 장거리 통신</span>
+          <span class="use-tag">아마추어 무선 (HAM)</span>
+          <span class="use-tag">원양 선박 통신</span>
+          <span class="use-tag">NVIS (수직 입사)</span>
+        </div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">✅ 장점 / ⚠️ 한계</div>
+        <ul class="feature-list">
+          <li>✅ 위성 없이 수천 km 통신 가능 (저비용)</li>
+          <li>✅ 핵전쟁 등 인프라 파괴 시에도 대체 통신 가능</li>
+          <li>⚠️ 태양 폭풍, 계절·시간대에 따른 불안정성</li>
+          <li>⚠️ Skip Zone 존재 → 중거리 통신 불감대</li>
+          <li>⚠️ 대역폭 협소 → 고속 데이터 통신 어려움</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ LINE OF SIGHT ══════════════ -->
+<div class="section los" id="los">
+  <div class="sec-anchor"></div>
+  <div class="sec-head">
+    <div class="sec-num">📡</div>
+    <div class="sec-head-text">
+      <div class="sec-en">Line-of-Sight (LOS) · 3</div>
+      <div class="sec-kr">직진 전파</div>
+      <div class="sec-sub">전파가 직선 경로로 진행 — 시선거리 내에서만 통신 가능</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="diagram-card">
+      <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" class="anim-los">
+        <defs>
+          <linearGradient id="skyLOS" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e8f6e8"/>
+            <stop offset="100%" stop-color="#f5fbf5"/>
+          </linearGradient>
+          <linearGradient id="earthLOS" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7bc47b"/>
+            <stop offset="100%" stop-color="#5aaa5a"/>
+          </linearGradient>
+          <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#2f9e44"/>
+          </marker>
+        </defs>
+        <rect width="480" height="260" fill="url(#skyLOS)"/>
+
+        <!-- Earth -->
+        <ellipse cx="240" cy="350" rx="430" ry="210" fill="url(#earthLOS)"/>
+
+        <!-- Cell tower left (high) -->
+        <line x1="85" y1="80" x2="85" y2="175" stroke="#666" stroke-width="3"/>
+        <line x1="75" y1="150" x2="95" y2="150" stroke="#666" stroke-width="2"/>
+        <line x1="75" y1="130" x2="95" y2="130" stroke="#666" stroke-width="2"/>
+        <rect x="78" y="60" width="14" height="22" rx="3" fill="#e03131"/>
+        <!-- Dish -->
+        <path d="M82,72 Q85,64 92,68" fill="none" stroke="#fff" stroke-width="2"/>
+        <rect x="79" y="175" width="12" height="8" rx="2" fill="#555"/>
+
+        <!-- Cell tower right (high, same height) -->
+        <line x1="385" y1="85" x2="385" y2="172" stroke="#666" stroke-width="3"/>
+        <line x1="375" y1="155" x2="395" y2="155" stroke="#666" stroke-width="2"/>
+        <line x1="375" y1="135" x2="395" y2="135" stroke="#666" stroke-width="2"/>
+        <rect x="378" y="65" width="14" height="22" rx="3" fill="#2f9e44"/>
+        <rect x="379" y="172" width="12" height="8" rx="2" fill="#555"/>
+
+        <!-- Fresnel zone (ellipse) -->
+        <ellipse cx="237" cy="118" rx="155" ry="26" fill="rgba(47,158,68,0.08)" stroke="rgba(47,158,68,0.3)" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="195" y="102" font-size="8" fill="rgba(47,158,68,0.8)" font-family="sans-serif">Fresnel Zone</text>
+
+        <!-- LOS ray -->
+        <path class="wave" d="M96,72 L375,74"
+              fill="none" stroke="#2f9e44" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowGreen)"/>
+
+        <!-- Earth curvature bulge -->
+        <path d="M85,175 Q237,155 385,172" fill="none" stroke="#5aaa5a" stroke-width="2" stroke-dasharray="5 4" opacity="0.7"/>
+
+        <!-- Curvature limit indicator -->
+        <line x1="237" y1="155" x2="237" y2="118" stroke="#e67700" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <text x="242" y="138" font-size="9" fill="#e67700" font-family="sans-serif">지구 곡률</text>
+        <text x="242" y="149" font-size="8" fill="#e67700" font-family="sans-serif">한계</text>
+
+        <!-- City buildings (blocked scenario) -->
+        <rect x="195" y="148" width="12" height="30" rx="1" fill="#aaa" opacity="0.6"/>
+        <rect x="210" y="140" width="14" height="38" rx="1" fill="#999" opacity="0.6"/>
+        <rect x="227" y="152" width="10" height="26" rx="1" fill="#aaa" opacity="0.5"/>
+
+        <!-- Blocked path (dotted) -->
+        <path d="M96,72 Q160,90 200,145" fill="none" stroke="#e03131" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+        <text x="120" y="102" font-size="9" fill="#e03131" font-family="sans-serif" opacity="0.8">장애물 차단</text>
+
+        <!-- Labels -->
+        <text x="72" y="55" font-size="10" fill="#e03131" font-weight="bold" font-family="sans-serif">TX</text>
+        <text x="377" y="58" font-size="10" fill="#2f9e44" font-weight="bold" font-family="sans-serif">RX</text>
+        <text x="180" y="82" font-size="10" fill="#2f9e44" font-weight="bold" font-family="sans-serif">Line-of-Sight</text>
+
+        <!-- Freq label -->
+        <rect x="8" y="8" width="120" height="20" rx="5" fill="rgba(47,158,68,0.15)"/>
+        <text x="13" y="22" font-size="10" fill="#2f9e44" font-weight="bold" font-family="sans-serif">VHF / UHF / GHz 이상</text>
+      </svg>
+    </div>
+
+    <div class="info-card">
+      <div class="info-section">
+        <div class="info-label">📡 전파 특성</div>
+        <ul class="feature-list">
+          <li>전파가 <strong>직선 경로</strong>로 진행 — 광선처럼 전파</li>
+          <li>지구 곡률에 의해 <strong>가시거리(LoS)로 통신 거리 제한</strong></li>
+          <li>안테나 높이가 높을수록 통신 가능 거리 증가</li>
+          <li>Fresnel Zone 내 장애물이 없어야 안정적 전파</li>
+          <li>고주파로 갈수록 직진성이 강해지고 회절 효과 감소</li>
+          <li>강우·안개·빌딩에 의한 감쇠 발생 가능</li>
+        </ul>
+      </div>
+      <div class="info-section">
+        <div class="info-label">📶 주파수 대역</div>
+        <div class="freq-badge">VHF (30 MHz) 이상 — UHF, SHF, EHF</div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">🎯 주요 활용</div>
+        <div class="use-tags">
+          <span class="use-tag">TV 방송 (VHF/UHF)</span>
+          <span class="use-tag">이동통신 LTE / 5G</span>
+          <span class="use-tag">Wi-Fi / Bluetooth</span>
+          <span class="use-tag">마이크로웨이브 링크</span>
+          <span class="use-tag">레이더</span>
+        </div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">✅ 장점 / ⚠️ 한계</div>
+        <ul class="feature-list">
+          <li>✅ 광대역 — 고속 데이터 통신 가능</li>
+          <li>✅ 낮은 간섭, 주파수 재사용 가능 (셀룰러)</li>
+          <li>⚠️ 가시거리 내에서만 통신 → 기지국 촘촘히 필요</li>
+          <li>⚠️ 높은 주파수는 강우 감쇠 증가</li>
+          <li>⚠️ 건물, 지형에 의해 음영 지역 발생</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SPACE WAVE ══════════════ -->
+<div class="section space" id="space">
+  <div class="sec-anchor"></div>
+  <div class="sec-head">
+    <div class="sec-num">🛰️</div>
+    <div class="sec-head-text">
+      <div class="sec-en">Space Wave · 4</div>
+      <div class="sec-kr">우주파 / 위성 전파</div>
+      <div class="sec-sub">대기 반사 없이 우주 공간을 직접 통과하거나 위성으로 중계</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="diagram-card">
+      <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg" class="anim-space">
+        <defs>
+          <linearGradient id="spaceBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#050d1a"/>
+            <stop offset="50%" stop-color="#0d1f3c"/>
+            <stop offset="80%" stop-color="#4a8fcf"/>
+            <stop offset="100%" stop-color="#7bbfe8"/>
+          </linearGradient>
+          <linearGradient id="earthSpace" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4a9ade"/>
+            <stop offset="30%" stop-color="#5aaa5a"/>
+            <stop offset="100%" stop-color="#4a8a4a"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect width="480" height="280" fill="url(#spaceBg)"/>
+
+        <!-- Stars -->
+        <circle cx="20" cy="12" r="1" fill="white" opacity="0.9"/>
+        <circle cx="65" cy="25" r="1.2" fill="white" opacity="0.8"/>
+        <circle cx="110" cy="8" r="0.8" fill="white" opacity="0.7"/>
+        <circle cx="170" cy="18" r="1" fill="white" opacity="0.85"/>
+        <circle cx="240" cy="6" r="1.2" fill="white" opacity="0.9"/>
+        <circle cx="310" cy="20" r="0.8" fill="white" opacity="0.7"/>
+        <circle cx="370" cy="12" r="1" fill="white" opacity="0.8"/>
+        <circle cx="430" cy="25" r="1.2" fill="white" opacity="0.75"/>
+        <circle cx="460" cy="8" r="0.8" fill="white" opacity="0.6"/>
+        <circle cx="50" cy="40" r="0.8" fill="white" opacity="0.5"/>
+        <circle cx="420" cy="38" r="1" fill="white" opacity="0.6"/>
+
+        <!-- Earth -->
+        <ellipse cx="240" cy="370" rx="440" ry="230" fill="url(#earthSpace)"/>
+
+        <!-- Satellite (GEO) -->
+        <g class="sat-float" transform="translate(240,38)">
+          <!-- Solar panels -->
+          <rect x="-32" y="-6" width="22" height="12" rx="2" fill="#d4a017" stroke="#a07800" stroke-width="1"/>
+          <rect x="10" y="-6" width="22" height="12" rx="2" fill="#d4a017" stroke="#a07800" stroke-width="1"/>
+          <!-- Panel lines -->
+          <line x1="-28" y1="-6" x2="-28" y2="6" stroke="#a07800" stroke-width="0.5"/>
+          <line x1="-20" y1="-6" x2="-20" y2="6" stroke="#a07800" stroke-width="0.5"/>
+          <line x1="16" y1="-6" x2="16" y2="6" stroke="#a07800" stroke-width="0.5"/>
+          <line x1="24" y1="-6" x2="24" y2="6" stroke="#a07800" stroke-width="0.5"/>
+          <!-- Body -->
+          <rect x="-10" y="-10" width="20" height="20" rx="3" fill="#c8d8e8" stroke="#8a9aaa" stroke-width="1.5"/>
+          <!-- Antenna dish -->
+          <ellipse cx="0" cy="-13" rx="6" ry="3" fill="none" stroke="#aaa" stroke-width="1.5"/>
+          <line x1="0" y1="-10" x2="0" y2="-13" stroke="#aaa" stroke-width="1"/>
+          <circle cx="0" cy="0" r="2" fill="#e03131"/>
+        </g>
+        <text x="258" y="35" font-size="9" fill="#d4a017" font-family="sans-serif" font-weight="bold">GEO Satellite</text>
+        <text x="261" y="45" font-size="8" fill="#aaa" font-family="sans-serif">35,786 km</text>
+
+        <!-- LEO Satellite (smaller, lower) -->
+        <g transform="translate(390,90)">
+          <rect x="-12" y="-4" width="8" height="8" rx="1" fill="#c8b400" stroke="#a07800" stroke-width="1"/>
+          <rect x="4" y="-4" width="8" height="8" rx="1" fill="#c8b400" stroke="#a07800" stroke-width="1"/>
+          <rect x="-4" y="-6" width="8" height="12" rx="2" fill="#d0d8e0" stroke="#8a9aaa" stroke-width="1"/>
+          <circle cx="0" cy="0" r="1.5" fill="#69db7c"/>
+        </g>
+        <text x="404" y="88" font-size="8" fill="#69db7c" font-family="sans-serif">LEO</text>
+        <text x="404" y="97" font-size="7" fill="#aaa" font-family="sans-serif">~550 km</text>
+
+        <!-- TX dish (earth, left) -->
+        <g transform="translate(80,160)">
+          <line x1="0" y1="0" x2="0" y2="28" stroke="#ccc" stroke-width="2.5"/>
+          <rect x="-6" y="28" width="12" height="6" rx="2" fill="#888"/>
+          <path d="M-14,-2 Q0,-14 14,-2" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="0" y1="0" x2="0" y2="-14" stroke="#ccc" stroke-width="1.5"/>
+        </g>
+        <text x="65" y="152" font-size="9" fill="#f59f00" font-weight="bold" font-family="sans-serif">지상국 TX</text>
+
+        <!-- RX dish (earth, right) -->
+        <g transform="translate(380,155)">
+          <line x1="0" y1="0" x2="0" y2="28" stroke="#ccc" stroke-width="2.5"/>
+          <rect x="-6" y="28" width="12" height="6" rx="2" fill="#888"/>
+          <path d="M-14,-2 Q0,-14 14,-2" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="0" y1="0" x2="0" y2="-14" stroke="#ccc" stroke-width="1.5"/>
+        </g>
+        <text x="363" y="148" font-size="9" fill="#b197fc" font-weight="bold" font-family="sans-serif">지상국 RX</text>
+
+        <!-- Uplink (TX → Satellite) -->
+        <path class="wave" d="M80,147 Q150,80 238,48"
+              fill="none" stroke="#f59f00" stroke-width="2" stroke-linecap="round"/>
+        <text x="110" y="95" font-size="9" fill="#f59f00" font-family="sans-serif" font-weight="bold">↑ Uplink</text>
+
+        <!-- Downlink (Satellite → RX) -->
+        <path class="wave" d="M242,48 Q320,80 380,143"
+              fill="none" stroke="#b197fc" stroke-width="2" stroke-linecap="round"/>
+        <text x="318" y="90" font-size="9" fill="#b197fc" font-family="sans-serif" font-weight="bold">↓ Downlink</text>
+
+        <!-- LEO path -->
+        <path d="M390,96 Q390,130 380,150" fill="none" stroke="#69db7c" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7"/>
+        <text x="395" y="125" font-size="8" fill="#69db7c" font-family="sans-serif">LEO</text>
+
+        <!-- GPS signal (multiple) -->
+        <path d="M240,38 L190,178" fill="none" stroke="rgba(103,65,217,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+        <path d="M240,38 L270,180" fill="none" stroke="rgba(103,65,217,0.4)" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="175" y="190" font-size="8" fill="rgba(103,65,217,0.7)" font-family="sans-serif">GPS 수신기</text>
+
+        <!-- Freq label -->
+        <rect x="8" y="8" width="100" height="20" rx="5" fill="rgba(167,139,250,0.2)"/>
+        <text x="13" y="22" font-size="10" fill="#b197fc" font-weight="bold" font-family="sans-serif">GHz ~ mmWave</text>
+      </svg>
+    </div>
+
+    <div class="info-card">
+      <div class="info-section">
+        <div class="info-label">📡 전파 특성</div>
+        <ul class="feature-list">
+          <li><strong>대기 반사 없이</strong> 전리층을 뚫고 우주 공간으로 직접 전파</li>
+          <li><strong>위성(GEO/MEO/LEO)</strong>을 통해 전 지구 커버리지 실현</li>
+          <li>LOS 기반 — 위성과 지상국 간 가시선 확보 필수</li>
+          <li>GEO(정지궤도, 35,786 km) — 광역 커버리지, 높은 지연</li>
+          <li>LEO(저궤도, ~550 km) — 저지연, 협대역 커버리지 (Starlink)</li>
+          <li>5G mmWave는 지상 LOS 통신에도 동일 개념 적용</li>
+        </ul>
+      </div>
+      <div class="info-section">
+        <div class="info-label">📶 주파수 대역</div>
+        <div class="freq-badge">GHz 대역 ~ mmWave (Ka, Ku, V Band)</div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">🎯 주요 활용</div>
+        <div class="use-tags">
+          <span class="use-tag">위성통신 (Starlink, Intelsat)</span>
+          <span class="use-tag">GPS / GNSS</span>
+          <span class="use-tag">5G mmWave (28/39 GHz)</span>
+          <span class="use-tag">위성 TV 방송</span>
+          <span class="use-tag">기상 위성</span>
+        </div>
+      </div>
+      <div class="info-section">
+        <div class="info-label">✅ 장점 / ⚠️ 한계</div>
+        <ul class="feature-list">
+          <li>✅ 전 지구 커버리지 — 어디서나 통신 가능</li>
+          <li>✅ 초고속 대용량 통신 (Gbps급 위성 인터넷)</li>
+          <li>⚠️ GEO는 높은 전파 지연 (~600 ms RTT)</li>
+          <li>⚠️ 강우 감쇠 (Rain Fading) 특히 Ka 밴드</li>
+          <li>⚠️ 지상 mmWave는 극단적으로 짧은 거리 한계</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SUMMARY ══════════════ -->
+<div id="summary">
+  <div class="sec-head" style="margin-bottom:20px">
+    <div class="sec-num" style="background:#f1f3f9">📊</div>
+    <div class="sec-head-text">
+      <div class="sec-en" style="color:var(--ts)">Comparison</div>
+      <div class="sec-kr" style="color:var(--tp)">전파 방식 비교 요약</div>
+    </div>
+  </div>
+
+  <!-- Freq Spectrum Bar -->
+  <div class="spectrum-bar" style="margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px">
+    <div class="spectrum-title">📶 주파수 대역별 전파 방식 분류</div>
+    <div class="freq-axis">
+      <div class="freq-seg fs-vlf"><span>VLF</span><span style="font-size:8px;font-weight:400">&lt;30kHz</span></div>
+      <div class="freq-seg fs-lf"><span>LF</span><span style="font-size:8px;font-weight:400">30–300kHz</span></div>
+      <div class="freq-seg fs-mf"><span>MF</span><span style="font-size:8px;font-weight:400">300k–3MHz</span></div>
+      <div class="freq-seg fs-hf"><span>HF</span><span style="font-size:8px;font-weight:400">3–30 MHz</span></div>
+      <div class="freq-seg fs-vhf"><span>VHF</span><span style="font-size:8px;font-weight:400">30–300MHz</span></div>
+      <div class="freq-seg fs-uhf"><span>UHF</span><span style="font-size:8px;font-weight:400">300M–3GHz</span></div>
+      <div class="freq-seg fs-shf"><span>SHF / EHF</span><span style="font-size:8px;font-weight:400">3 GHz+</span></div>
+    </div>
+    <div style="display:flex;margin-top:10px;gap:4px">
+      <div style="flex:1;height:10px;border-radius:3px;background:var(--ground-b)"></div>
+      <div style="flex:2;height:10px;border-radius:3px;background:var(--ground-b)"></div>
+      <div style="flex:2;height:10px;border-radius:3px;background:var(--sky-b)"></div>
+      <div style="flex:2;height:10px;border-radius:3px;background:var(--los-b)"></div>
+      <div style="flex:3;height:10px;border-radius:3px;background:var(--los-b)"></div>
+      <div style="flex:4;height:10px;border-radius:3px;background:var(--space-b)"></div>
+    </div>
+    <div style="display:flex;margin-top:8px;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ground)"><div style="width:12px;height:6px;border-radius:2px;background:var(--ground-b)"></div>Ground Wave</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--sky)"><div style="width:12px;height:6px;border-radius:2px;background:var(--sky-b)"></div>Sky Wave</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--los)"><div style="width:12px;height:6px;border-radius:2px;background:var(--los-b)"></div>Line-of-Sight</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--space)"><div style="width:12px;height:6px;border-radius:2px;background:var(--space-b)"></div>Space Wave</div>
+    </div>
+  </div>
+
+  <div class="summary-card">
+    <div class="summary-title">📋 전파 방식 비교표</div>
+    <div style="overflow-x:auto">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>전파 방식</th>
+          <th>주파수 대역</th>
+          <th>전파 메커니즘</th>
+          <th>통신 거리</th>
+          <th>안정성</th>
+          <th>대역폭</th>
+          <th>주요 응용</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mode-badge mb-ground">🌍 Ground Wave</span></td>
+          <td>LF / MF<br><span style="color:var(--tm);font-size:11px">30 kHz – 3 MHz</span></td>
+          <td>지면 회절<br>곡면 추종</td>
+          <td style="font-weight:700;color:var(--ground)">수백~수천 km<br><span style="font-size:11px;font-weight:400;color:var(--tm)">매우 장거리</span></td>
+          <td>⭐⭐⭐⭐⭐<br><span style="font-size:11px;color:var(--tm)">매우 안정</span></td>
+          <td>⭐<br><span style="font-size:11px;color:var(--tm)">협소</span></td>
+          <td style="font-size:12px">AM 방송, 해상 통신</td>
+        </tr>
+        <tr>
+          <td><span class="mode-badge mb-sky">☁️ Sky Wave</span></td>
+          <td>HF<br><span style="color:var(--tm);font-size:11px">3 – 30 MHz</span></td>
+          <td>전리층 반사<br>Multi-hop</td>
+          <td style="font-weight:700;color:var(--sky)">수천~수만 km<br><span style="font-size:11px;font-weight:400;color:var(--tm)">전 지구권 가능</span></td>
+          <td>⭐⭐<br><span style="font-size:11px;color:var(--tm)">불안정 (태양)</span></td>
+          <td>⭐⭐<br><span style="font-size:11px;color:var(--tm)">협소</span></td>
+          <td style="font-size:12px">단파 방송, 군사 통신</td>
+        </tr>
+        <tr>
+          <td><span class="mode-badge mb-los">📡 LOS</span></td>
+          <td>VHF 이상<br><span style="color:var(--tm);font-size:11px">30 MHz – GHz</span></td>
+          <td>직진 전파<br>가시거리 한정</td>
+          <td style="font-weight:700;color:var(--los)">수십~수백 km<br><span style="font-size:11px;font-weight:400;color:var(--tm)">안테나 높이 의존</span></td>
+          <td>⭐⭐⭐⭐<br><span style="font-size:11px;color:var(--tm)">안정</span></td>
+          <td>⭐⭐⭐⭐⭐<br><span style="font-size:11px;color:var(--tm)">광대역</span></td>
+          <td style="font-size:12px">TV, LTE, 5G, Wi-Fi</td>
+        </tr>
+        <tr>
+          <td><span class="mode-badge mb-space">🛰️ Space Wave</span></td>
+          <td>GHz ~ mmWave<br><span style="color:var(--tm);font-size:11px">1 GHz 이상</span></td>
+          <td>위성 중계<br>직접 LOS</td>
+          <td style="font-weight:700;color:var(--space)">전 지구권<br><span style="font-size:11px;font-weight:400;color:var(--tm)">GEO 35,786 km</span></td>
+          <td>⭐⭐⭐⭐<br><span style="font-size:11px;color:var(--tm)">강우 감쇠 유의</span></td>
+          <td>⭐⭐⭐⭐⭐<br><span style="font-size:11px;color:var(--tm)">초광대역</span></td>
+          <td style="font-size:12px">위성통신, GPS, 5G mmWave</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Key Comparison Cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px">
+      <div style="font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">통신 거리 순위</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">1위</span><span style="background:var(--sky-l);color:var(--sky);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Sky Wave</span><span style="font-size:11px;color:var(--tm)">전 지구권 (multi-hop)</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">2위</span><span style="background:var(--space-l);color:var(--space);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Space Wave</span><span style="font-size:11px;color:var(--tm)">전 지구권 (위성)</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">3위</span><span style="background:var(--ground-l);color:var(--ground);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Ground Wave</span><span style="font-size:11px;color:var(--tm)">수백~천 km</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">4위</span><span style="background:var(--los-l);color:var(--los);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">LOS</span><span style="font-size:11px;color:var(--tm)">수십~수백 km</span></div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px">
+      <div style="font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">대역폭 (데이터 속도)</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">1위</span><span style="background:var(--space-l);color:var(--space);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Space Wave</span><span style="font-size:11px;color:var(--tm)">Gbps급</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">2위</span><span style="background:var(--los-l);color:var(--los);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">LOS</span><span style="font-size:11px;color:var(--tm)">수 Gbps (5G)</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">3위</span><span style="background:var(--sky-l);color:var(--sky);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Sky Wave</span><span style="font-size:11px;color:var(--tm)">수십~수백 kbps</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">4위</span><span style="background:var(--ground-l);color:var(--ground);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Ground Wave</span><span style="font-size:11px;color:var(--tm)">수 kbps</span></div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px">
+      <div style="font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">안정성 · 신뢰성</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">1위</span><span style="background:var(--ground-l);color:var(--ground);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Ground Wave</span><span style="font-size:11px;color:var(--tm)">주야 거의 일정</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">2위</span><span style="background:var(--los-l);color:var(--los);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">LOS</span><span style="font-size:11px;color:var(--tm)">안정 (기후 영향 일부)</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">3위</span><span style="background:var(--space-l);color:var(--space);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Space Wave</span><span style="font-size:11px;color:var(--tm)">강우 감쇠 유의</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px">4위</span><span style="background:var(--sky-l);color:var(--sky);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px">Sky Wave</span><span style="font-size:11px;color:var(--tm)">태양·계절 영향</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<footer style="text-align:center;padding:28px;border-top:1px solid var(--border);background:var(--surface);color:var(--tm);font-size:12px">
+  <p>Radio Wave Propagation — Ground · Sky · LOS · Space Wave 개념 정리</p>
+  <p style="margin-top:4px">주파수별 전파 특성, 활용 사례 및 비교 요약</p>
+</footer>
+
+</body>
+</html>
